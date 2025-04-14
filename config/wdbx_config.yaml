@@ -1,0 +1,86 @@
+# WDBX Configuration
+
+# Core settings
+vector_dimension: 384
+num_shards: 2
+data_dir: "./wdbx_data"
+enable_plugins: true
+enable_distributed: false
+enable_gpu: false
+log_level: "INFO"
+
+# Vector storage settings
+vector_store:
+  save_immediately: false
+  threads: 4
+  cache_size_mb: 128
+
+# Index settings
+indexing:
+  type: "hnsw" # "hnsw" or "faiss"
+  hnsw:
+    m: 16
+    ef_construction: 200
+    ef_search: 50
+  faiss:
+    index_type: "Flat"
+    nprobe: 8
+
+# API server settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  enable_auth: false
+  auth_key: ""
+  enable_cors: true
+  cors_origins: ["*"]
+
+# Plugin settings
+plugins:
+  # WebScraper plugin
+  webscraper:
+    user_agent: "WDBX WebScraper/0.2.0"
+    respect_robots_txt: true
+    timeout: 10.0
+    max_depth: 1
+    concurrency: 5
+    rate_limit: 1.0
+    embedding_model: "all-MiniLM-L6-v2"
+
+  # Ollama plugin
+  ollama:
+    host: "http://localhost:11434"
+    model: "llama3"
+    timeout: 30.0
+    embedding_model: "all-MiniLM-L6-v2"
+
+  # LMStudio plugin
+  lmstudio:
+    host: "localhost"
+    port: 8000
+    model: ""
+    embedding_model: ""
+    timeout: 30.0
+
+  # Social Media plugin
+  socialmedia:
+    enabled_platforms: "twitter,reddit"
+    cache_ttl: 300
+    demo_mode: true
+
+# Security settings
+security:
+  enable_encryption: false
+  enable_authentication: false
+  enable_access_control: false
+  token_expiry: 86400 # 24 hours
+
+# Distributed settings
+distributed:
+  host: "localhost"
+  port: 7777
+  auth_enabled: false
+  auth_key: ""
+  replication_factor: 1
+  coordinator_host: "localhost"
+  coordinator_port: 7777

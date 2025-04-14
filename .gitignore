@@ -1,174 +1,147 @@
-# Byte-compiled / optimized / DLL files
+#   logs
+pip-delete-*.log
+
+# Celery beat schedule file
+celerybeat-schedule
+
+# Django stuff
+*.cache
 __pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
 db.sqlite3
-db.sqlite3-journal
+*.json
+cover.xml
+htmlcov/
 
-# Flask stuff:
-instance/
-.webassets-cache
+# PyCharm
 
-# Scrapy stuff:
-.scrapy
+# Virtualenv
+*.pyc
 
 # Sphinx documentation
 docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
+docs/_build
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# IPython
-profile_default/
-ipython_config.py
+# PyInstaller
+*.sqlite3
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+# Scrapy
+.scrapy/
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+# PyInstaller
+*.pyinstaller
 
-# UV
-#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#uv.lock
+# Celery
+*.pid
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
+# Pytest
+.pytest_cache/
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/latest/usage/project/#working-with-version-control
-.pdm.toml
-.pdm-python
-.pdm-build/
+# Environments
+*.env
+.env
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+# Jupyter Notebook
+.ipynb
+.checkpoints
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+# Jupyter
+.ipynb_checkpoints/
 
-# SageMath parsed files
-*.sage.py
+# Jupyter
+*.ipynb
+
+# Environments
+.python_version
+
+# celerybeat
+*.pid
+
+# Jupyter notebook
+.checkpoints
+*.nbcheck
+
+# ipython
+*.checkpoints
+*.ipnb
+
+# Environments
+.pyenv
+*.env
+
+# Scrapy
+.pids
+
+# Celerybeat
+*.pid
+*.celerybeat
+
+# Celery
+celerybeat
+
+# Pytest
+*.cov
+*.pytest_cache
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Pyenv
+*.ipynb_checkpoints
+
+# Jupyter
+.ipynb_checkpoints
+
+# Celery
+celerybeat
+
+# Celerybeat
+*.pid
+
+# Celerybeat
+beat
 
 # Environments
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
+# Celery
+*.pid
 
-# Rope project settings
-.ropeproject
+# Celerybeat
+*.beat
 
-# mkdocs documentation
-/site
+# Celery
+*.beat
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# Celery
+beat
 
-# Pyre type checker
-.pyre/
+# Celery beat
+pid
 
-# pytype static type analyzer
-.pytype/
+# Celery beat
+*.pid
+beat
 
-# Cython debug symbols
-cython_debug/
+# Celerybeat
+*.celerybeat
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+# Celery
+*.pid
 
-# Ruff stuff:
-.ruff_cache/
+# Pipenv
+*.env
 
-# PyPI configuration file
-.pypirc
+# Celery beat
+*.beat
+
+# Celerybeat
+*.pid
+
+# Celerybeat
+*.beat

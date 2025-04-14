@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  wdbx_api:
+    build: .
+    image: wdbx:latest
+    container_name: wdbx_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    environment:
+      - WDBX_DATA_DIR=/app/data
+      - WDBX_LOG_LEVEL=INFO
+      - WDBX_VECTOR_DIMENSION=384
+      - WDBX_ENABLE_PLUGINS=true
+    command: python -m wdbx.cli serve --host 0.0.0.0 --port 8000
+
+  wdbx_ollama:
+    image: ollama/ollama:latest
+    container_name: wdbx_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+
+  wdbx_visualization:
+    build: .
+    image: wdbx:latest
+    container_name: wdbx_visualization
+    restart: unless-stopped
+    ports:
+      - "8050:8050"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    environment:
+      - WDBX_DATA_DIR=/app/data
+      - WDBX_LOG_LEVEL=INFO
+      - WDBX_VECTOR_DIMENSION=384
+      - WDBX_ENABLE_PLUGINS=true
+    depends_on:
+      - wdbx_api
+    command: >
+      python -c "
+      import asyncio
+      from wdbx import WDBX
+      from wdbx.utils.visualization import VectorVisualizer
+
+      async def main():
+          wdbx = WDBX(vector_dimension=384, data_dir='/app/data', enable_plugins=True)
+          await wdbx.initialize()
+
+          visualizer = VectorVisualizer(wdbx)
+          visualizer.create_interactive_dashboard(port=8050)
+
+      asyncio.run(main())
+      "
+
+volumes:
+  ollama_data:
