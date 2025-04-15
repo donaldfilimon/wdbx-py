@@ -335,7 +335,7 @@ class HNSWIndex(VectorIndex):
             return True
         except Exception as e:
             logger.error(f"Error saving HNSW index: {e}")
-            return False
+            raise RuntimeError(f"Error saving HNSW index: {e}")
 
     async def initialize(self):
         """Asynchronously initialize the index."""

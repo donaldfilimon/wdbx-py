@@ -233,23 +233,27 @@ class VectorStore:
         Returns:
             True if the storage was successful
         """
-        # Convert vector to numpy array
-        vector_np = np.array(vector, dtype=np.float32)
+        try:
+            # Convert vector to numpy array
+            vector_np = np.array(vector, dtype=np.float32)
 
-        # Store vector and metadata
-        self.vectors[vector_id] = vector_np
-        self.metadata[vector_id] = metadata or {}
+            # Store vector and metadata
+            self.vectors[vector_id] = vector_np
+            self.metadata[vector_id] = metadata or {}
 
-        # Add to appropriate index
-        shard = self._get_shard_for_id(vector_id)
-        self.indices[shard].add(vector_id, vector_np)
+            # Add to appropriate index
+            shard = self._get_shard_for_id(vector_id)
+            self.indices[shard].add(vector_id, vector_np)
 
-        # If configured to save immediately, do so
-        if self.config.get("VECTOR_STORE_SAVE_IMMEDIATELY", False):
-            self._save_metadata()
-            self._save_vectors()
+            # If configured to save immediately, do so
+            if self.config.get("VECTOR_STORE_SAVE_IMMEDIATELY", False):
+                self._save_metadata()
+                self._save_vectors()
 
-        return True
+            return True
+        except Exception as e:
+            logger.error(f"Error storing vector: {e}")
+            return False
 
     async def store_async(
         self,
@@ -268,27 +272,31 @@ class VectorStore:
         Returns:
             True if the storage was successful
         """
-        # Convert vector to numpy array
-        vector_np = np.array(vector, dtype=np.float32)
+        try:
+            # Convert vector to numpy array
+            vector_np = np.array(vector, dtype=np.float32)
 
-        # Store vector and metadata
-        self.vectors[vector_id] = vector_np
-        self.metadata[vector_id] = metadata or {}
+            # Store vector and metadata
+            self.vectors[vector_id] = vector_np
+            self.metadata[vector_id] = metadata or {}
 
-        # Add to appropriate index asynchronously
-        shard = self._get_shard_for_id(vector_id)
-        await self.indices[shard].add_async(vector_id, vector_np)
+            # Add to appropriate index asynchronously
+            shard = self._get_shard_for_id(vector_id)
+            await self.indices[shard].add_async(vector_id, vector_np)
 
-        # If configured to save immediately, do so
-        if self.config.get("VECTOR_STORE_SAVE_IMMEDIATELY", False):
-            # Run in thread pool to avoid blocking
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(
-                self.thread_pool,
-                lambda: (self._save_metadata(), self._save_vectors())
-            )
+            # If configured to save immediately, do so
+            if self.config.get("VECTOR_STORE_SAVE_IMMEDIATELY", False):
+                # Run in thread pool to avoid blocking
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    self.thread_pool,
+                    lambda: (self._save_metadata(), self._save_vectors())
+                )
 
-        return True
+            return True
+        except Exception as e:
+            logger.error(f"Error storing vector asynchronously: {e}")
+            return False
 
     def search(
         self,
@@ -701,7 +709,7 @@ class VectorStore:
             index.optimize()
         return True
 
-    async def optimize_async(self) -> bool:
+    async def optimize_async() -> bool:
         """
         Asynchronously optimize the vector indices for better performance.
 

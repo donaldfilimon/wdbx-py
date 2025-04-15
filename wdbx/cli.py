@@ -396,6 +396,7 @@ class WDBXCLI:
                     except Exception as e:
                         print(
                             f"Error creating embedding with {plugin_name}: {e}")
+                        continue
 
             if vector is None:
                 print("No embedding plugin available")
