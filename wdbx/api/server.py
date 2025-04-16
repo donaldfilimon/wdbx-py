@@ -62,7 +62,11 @@ class WDBXAPIServer:
         self.cors_origins = cors_origins or ["*"]
 
         # Initialize FastAPI
-        self.app = None
+        self.app = FastAPI(
+            title="WDBX API",
+            description="API for WDBX vector database",
+            version=self.wdbx.version,
+        )
         self.api_router = None
 
         logger.info(f"Initialized WDBXAPIServer on {host}:{port}")
@@ -74,13 +78,6 @@ class WDBXAPIServer:
             from fastapi.security.api_key import APIKeyHeader
             from fastapi.middleware.cors import CORSMiddleware
             from pydantic import BaseModel, Field
-
-            # Create FastAPI application
-            self.app = FastAPI(
-                title="WDBX API",
-                description="API for WDBX vector database",
-                version=self.wdbx.version,
-            )
 
             # Create API router
             self.api_router = APIRouter()
@@ -314,8 +311,8 @@ class WDBXAPIServer:
             )
 
             # Create and start server
-            server = uvicorn.Server(config)
-            await server.serve()
+            self.server = uvicorn.Server(config)
+            await self.server.serve()
 
             logger.info(f"API server started on {self.host}:{self.port}")
         except ImportError as e:
@@ -326,6 +323,13 @@ class WDBXAPIServer:
         except Exception as e:
             logger.error(f"Error starting API server: {e}")
             raise RuntimeError(f"Error starting API server: {e}")
+
+    async def stop(self):
+        """Stop the API server."""
+        if self.server:
+            self.server.should_exit = True
+            await self.server.shutdown()
+            logger.info("API server stopped")
 
     def start_in_thread(self):
         """Start the API server in a separate thread."""

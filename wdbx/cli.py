@@ -307,7 +307,10 @@ class WDBXCLI:
                     else:
                         cmd_args.append(f"--{key} {value}")
 
-            await self.run_command(parsed_args.command, " ".join(cmd_args))
+            try:
+                await self.run_command(parsed_args.command, " ".join(cmd_args))
+            except ValueError as e:
+                print(f"Error: {e}")
         else:
             # Interactive mode
             await self.run_interactive()

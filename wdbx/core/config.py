@@ -104,6 +104,8 @@ class WDBXConfig:
                 self.config_sources[key] = f"file:{config_path}"
 
             logger.debug(f"Loaded configuration from file: {config_path}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Malformed configuration file {config_path}: {e}")
         except Exception as e:
             logger.error(
                 f"Error loading configuration from file {config_path}: {e}")
