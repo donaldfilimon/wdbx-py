@@ -217,7 +217,11 @@ class WDBXCLI:
             raise ValueError(f"Command not found: {command}")
 
         handler = self.commands[command]["handler"]
-        return await handler(args)
+        try:
+            return await handler(args)
+        except Exception as e:
+            logger.error(f"Error running command '{command}': {e}")
+            return f"Error: {e}"
 
     async def run_interactive(self):
         """Run in interactive mode."""
@@ -243,11 +247,14 @@ class WDBXCLI:
                 args = parts[1] if len(parts) > 1 else ""
 
                 # Run command
-                await self.run_command(command, args)
+                result = await self.run_command(command, args)
+                if result:
+                    print(result)
 
             except KeyboardInterrupt:
                 print("\nOperation cancelled.")
             except Exception as e:
+                logger.error(f"Error in interactive mode: {e}")
                 print(f"Error: {e}")
 
     async def run(self, args: List[str]):
@@ -307,10 +314,18 @@ class WDBXCLI:
                     else:
                         cmd_args.append(f"--{key} {value}")
 
-            await self.run_command(parsed_args.command, " ".join(cmd_args))
+            try:
+                await self.run_command(parsed_args.command, " ".join(cmd_args))
+            except Exception as e:
+                logger.error(f"Error running command '{parsed_args.command}': {e}")
+                print(f"Error: {e}")
         else:
             # Interactive mode
-            await self.run_interactive()
+            try:
+                await self.run_interactive()
+            except Exception as e:
+                logger.error(f"Error in interactive mode: {e}")
+                print(f"Error: {e}")
 
     # Command handlers
 
