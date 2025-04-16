@@ -217,7 +217,11 @@ class WDBXCLI:
             raise ValueError(f"Command not found: {command}")
 
         handler = self.commands[command]["handler"]
-        return await handler(args)
+        try:
+            return await handler(args)
+        except Exception as e:
+            logger.error(f"Error running command '{command}': {e}")
+            raise
 
     async def run_interactive(self):
         """Run in interactive mode."""
@@ -283,7 +287,12 @@ class WDBXCLI:
                     cmd_parser.add_argument(opt_name, help=opt_desc)
 
         # Parse arguments
-        parsed_args = parser.parse_args(args)
+        try:
+            parsed_args = parser.parse_args(args)
+        except argparse.ArgumentError as e:
+            logger.error(f"Argument parsing error: {e}")
+            print(f"Error: {e}")
+            return
 
         # Set up logging
         log_level = logging.DEBUG if parsed_args.debug else logging.INFO
@@ -365,6 +374,10 @@ class WDBXCLI:
         try:
             parsed_args = parser.parse_args(args.split())
         except SystemExit:
+            return
+        except argparse.ArgumentError as e:
+            logger.error(f"Argument parsing error: {e}")
+            print(f"Error: {e}")
             return
 
         # Get vector data
@@ -449,6 +462,10 @@ class WDBXCLI:
         try:
             parsed_args = parser.parse_args(args.split())
         except SystemExit:
+            return
+        except argparse.ArgumentError as e:
+            logger.error(f"Argument parsing error: {e}")
+            print(f"Error: {e}")
             return
 
         # Get query vector
@@ -591,6 +608,10 @@ class WDBXCLI:
         try:
             parsed_args = parser.parse_args(args.split())
         except SystemExit:
+            return
+        except argparse.ArgumentError as e:
+            logger.error(f"Argument parsing error: {e}")
+            print(f"Error: {e}")
             return
 
         # Get vector ID
