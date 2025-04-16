@@ -12,12 +12,7 @@ def get_requirements():
 
 def get_extension_modules():
     """Returns a list of all Cython extension modules"""
-    return [
-        Extension(
-            "wdbx.example_module",
-            [str(Path("wdbx") / "example_module.pyx")]
-        )
-    ]
+    return []
 
 
 class CustomBuildExt(build_ext):
