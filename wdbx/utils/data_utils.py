@@ -39,12 +39,12 @@ def load_vectors_from_csv(
         vectors = {}
         metadata = {}
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             # Determine if column identifiers are indices or names
-            if isinstance(
-                    vector_column, str) or (
-                    metadata_columns
-                    and any(isinstance(col, str) for col in metadata_columns)):
+            if isinstance(vector_column, str) or (
+                metadata_columns
+                and any(isinstance(col, str) for col in metadata_columns)
+            ):
                 # Column names provided, use DictReader
                 reader = csv.DictReader(f, delimiter=delimiter)
 
@@ -62,8 +62,8 @@ def load_vectors_from_csv(
                         # Get metadata
                         if metadata_columns:
                             metadata[vector_id] = {
-                                col: row[col] for col in metadata_columns
-                                if col in row}
+                                col: row[col] for col in metadata_columns if col in row
+                            }
                         else:
                             metadata[vector_id] = {}
                     except Exception as e:
@@ -80,7 +80,9 @@ def load_vectors_from_csv(
                 for i, row in enumerate(reader):
                     try:
                         # Get vector ID
-                        vector_id = row[id_column] if id_column is not None else f"row_{i}"
+                        vector_id = (
+                            row[id_column] if id_column is not None else f"row_{i}"
+                        )
 
                         # Get vector data
                         vector_str = row[vector_column]
@@ -90,8 +92,10 @@ def load_vectors_from_csv(
                         # Get metadata
                         if metadata_columns:
                             metadata[vector_id] = {
-                                f"col_{j} ": row[j] for j in metadata_columns
-                                if j < len(row)}
+                                f"col_{j} ": row[j]
+                                for j in metadata_columns
+                                if j < len(row)
+                            }
                         else:
                             metadata[vector_id] = {}
                     except Exception as e:
@@ -126,7 +130,7 @@ def load_vectors_from_jsonl(
         vectors = {}
         metadata = {}
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             for i, line in enumerate(f):
                 try:
                     # Parse JSON object
@@ -143,16 +147,19 @@ def load_vectors_from_jsonl(
                         # Get metadata
                         if metadata_fields:
                             metadata[vector_id] = {
-                                field: obj[field] for field in metadata_fields
-                                if field in obj}
+                                field: obj[field]
+                                for field in metadata_fields
+                                if field in obj
+                            }
                         else:
                             # Include all fields except vector field
                             metadata[vector_id] = {
-                                k: v for k, v in obj.items()
-                                if k != vector_field}
+                                k: v for k, v in obj.items() if k != vector_field
+                            }
                     else:
                         logger.warning(
-                            f"Vector field '{vector_field}' not found in line {i}")
+                            f"Vector field '{vector_field}' not found in line {i}"
+                        )
 
                 except Exception as e:
                     logger.warning(f"Error processing line {i}: {e}")
@@ -182,7 +189,7 @@ def parse_vector(vector_data: Union[str, List, Dict]) -> List[float]:
         # String representation, try different formats
         vector_data = vector_data.strip()
 
-        if vector_data.startswith('[') and vector_data.endswith(']'):
+        if vector_data.startswith("[") and vector_data.endswith("]"):
             # JSON array format
             try:
                 return [float(x) for x in json.loads(vector_data)]
@@ -191,7 +198,7 @@ def parse_vector(vector_data: Union[str, List, Dict]) -> List[float]:
 
         # Comma-separated values
         try:
-            return [float(x.strip()) for x in vector_data.split(',')]
+            return [float(x.strip()) for x in vector_data.split(",")]
         except ValueError:
             pass
 
@@ -204,8 +211,8 @@ def parse_vector(vector_data: Union[str, List, Dict]) -> List[float]:
         # Try to interpret as a numpy array string representation
         try:
             # Replace various numpy notations
-            vector_data = vector_data.replace('array(', '').replace(')', '')
-            vector_data = vector_data.replace('[', '').replace(']', '')
+            vector_data = vector_data.replace("array(", "").replace(")", "")
+            vector_data = vector_data.replace("[", "").replace("]", "")
             return [float(x) for x in vector_data.split()]
         except ValueError:
             pass
@@ -214,22 +221,18 @@ def parse_vector(vector_data: Union[str, List, Dict]) -> List[float]:
 
     elif isinstance(vector_data, dict):
         # Dictionary format, look for common field names
-        for field in ['vector', 'embedding', 'values', 'data']:
+        for field in ["vector", "embedding", "values", "data"]:
             if field in vector_data:
                 return parse_vector(vector_data[field])
 
-        raise ValueError(
-            f"Could not find vector data in dictionary: {vector_data}")
+        raise ValueError(f"Could not find vector data in dictionary: {vector_data}")
 
     else:
         raise ValueError(f"Unsupported vector data type: {type(vector_data)}")
 
 
 def chunk_text(
-    text: str,
-    chunk_size: int = 1000,
-    chunk_overlap: int = 200,
-    separator: str = " "
+    text: str, chunk_size: int = 1000, chunk_overlap: int = 200, separator: str = " "
 ) -> List[str]:
     """
     Split text into overlapping chunks.

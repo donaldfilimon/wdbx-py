@@ -89,12 +89,14 @@ class WDBX:
             self._init_distributed()
 
         logger.info(
-            f"WDBX initialized successfully with vector_dim={self.vector_dim}, num_shards={self.num_shards}")
+            f"WDBX initialized successfully with vector_dim={self.vector_dim}, num_shards={self.num_shards}"
+        )
 
     @property
     def version(self) -> str:
         """Return the current WDBX version."""
         from .. import __version__
+
         return __version__
 
     def _setup_logging(self, log_level: str):
@@ -160,8 +162,7 @@ class WDBX:
 
         # Initialize plugins
         if self.enable_plugins:
-            init_tasks = [plugin.initialize()
-                          for plugin in self.plugins.values()]
+            init_tasks = [plugin.initialize() for plugin in self.plugins.values()]
             if init_tasks:
                 await asyncio.gather(*init_tasks)
 
@@ -182,8 +183,7 @@ class WDBX:
 
         # Shut down plugins
         if self.enable_plugins:
-            shutdown_tasks = [plugin.shutdown()
-                              for plugin in self.plugins.values()]
+            shutdown_tasks = [plugin.shutdown() for plugin in self.plugins.values()]
             if shutdown_tasks:
                 await asyncio.gather(*shutdown_tasks)
 
@@ -242,7 +242,7 @@ class WDBX:
         self,
         vector: List[float],
         metadata: Optional[Dict[str, Any]] = None,
-        id: Optional[str] = None
+        id: Optional[str] = None,
     ) -> str:
         """
         Store a vector in the database.
@@ -258,7 +258,8 @@ class WDBX:
         # Validate vector dimensions
         if len(vector) != self.vector_dim:
             raise ValueError(
-                f"Vector dimension mismatch: expected {self.vector_dim}, got {len(vector)}")
+                f"Vector dimension mismatch: expected {self.vector_dim}, got {len(vector)}"
+            )
 
         # Generate ID if not provided
         vector_id = id or str(uuid.uuid4())
@@ -272,7 +273,7 @@ class WDBX:
         self,
         vector: List[float],
         metadata: Optional[Dict[str, Any]] = None,
-        id: Optional[str] = None
+        id: Optional[str] = None,
     ) -> str:
         """
         Asynchronously store a vector in the database.
@@ -288,7 +289,8 @@ class WDBX:
         # Validate vector dimensions
         if len(vector) != self.vector_dim:
             raise ValueError(
-                f"Vector dimension mismatch: expected {self.vector_dim}, got {len(vector)}")
+                f"Vector dimension mismatch: expected {self.vector_dim}, got {len(vector)}"
+            )
 
         # Generate ID if not provided
         vector_id = id or str(uuid.uuid4())
@@ -303,7 +305,7 @@ class WDBX:
         query_vector: List[float],
         limit: int = 10,
         threshold: float = 0.0,
-        filter_metadata: Optional[Dict[str, Any]] = None
+        filter_metadata: Optional[Dict[str, Any]] = None,
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
         """
         Search for vectors similar to the query vector.
@@ -320,14 +322,15 @@ class WDBX:
         # Validate vector dimensions
         if len(query_vector) != self.vector_dim:
             raise ValueError(
-                f"Vector dimension mismatch: expected {self.vector_dim}, got {len(query_vector)}")
+                f"Vector dimension mismatch: expected {self.vector_dim}, got {len(query_vector)}"
+            )
 
         # Perform the search
         results = self.vector_store.search(
             query_vector,
             limit=limit,
             threshold=threshold,
-            filter_metadata=filter_metadata
+            filter_metadata=filter_metadata,
         )
 
         return results
@@ -337,7 +340,7 @@ class WDBX:
         query_vector: List[float],
         limit: int = 10,
         threshold: float = 0.0,
-        filter_metadata: Optional[Dict[str, Any]] = None
+        filter_metadata: Optional[Dict[str, Any]] = None,
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
         """
         Asynchronously search for vectors similar to the query vector.
@@ -354,14 +357,15 @@ class WDBX:
         # Validate vector dimensions
         if len(query_vector) != self.vector_dim:
             raise ValueError(
-                f"Vector dimension mismatch: expected {self.vector_dim}, got {len(query_vector)}")
+                f"Vector dimension mismatch: expected {self.vector_dim}, got {len(query_vector)}"
+            )
 
         # Perform the search
         results = await self.vector_store.search_async(
             query_vector,
             limit=limit,
             threshold=threshold,
-            filter_metadata=filter_metadata
+            filter_metadata=filter_metadata,
         )
 
         return results
@@ -390,8 +394,7 @@ class WDBX:
         """
         return await self.vector_store.delete_async(vector_id)
 
-    def update_metadata(
-            self, vector_id: str, metadata: Dict[str, Any]) -> bool:
+    def update_metadata(self, vector_id: str, metadata: Dict[str, Any]) -> bool:
         """
         Update the metadata for a vector.
 
@@ -405,7 +408,8 @@ class WDBX:
         return self.vector_store.update_metadata(vector_id, metadata)
 
     async def update_metadata_async(
-            self, vector_id: str, metadata: Dict[str, Any]) -> bool:
+        self, vector_id: str, metadata: Dict[str, Any]
+    ) -> bool:
         """
         Asynchronously update the metadata for a vector.
 
@@ -418,7 +422,9 @@ class WDBX:
         """
         return await self.vector_store.update_metadata_async(vector_id, metadata)
 
-    def get_vector(self, vector_id: str) -> Optional[Tuple[List[float], Dict[str, Any]]]:
+    def get_vector(
+        self, vector_id: str
+    ) -> Optional[Tuple[List[float], Dict[str, Any]]]:
         """
         Get a vector and its metadata by ID.
 
@@ -430,7 +436,9 @@ class WDBX:
         """
         return self.vector_store.get(vector_id)
 
-    async def get_vector_async(self, vector_id: str) -> Optional[Tuple[List[float], Dict[str, Any]]]:
+    async def get_vector_async(
+        self, vector_id: str
+    ) -> Optional[Tuple[List[float], Dict[str, Any]]]:
         """
         Asynchronously get a vector and its metadata by ID.
 

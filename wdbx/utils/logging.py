@@ -68,18 +68,14 @@ def configure_logging(
 
         # Create rotating file handler
         file_handler = logging.handlers.RotatingFileHandler(
-            log_file,
-            maxBytes=max_file_size,
-            backupCount=backup_count,
-            encoding='utf-8'
+            log_file, maxBytes=max_file_size, backupCount=backup_count, encoding="utf-8"
         )
         file_handler.setLevel(file_log_level)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
 
 
-def get_logger(
-        name: str, level: Optional[Union[int, str]] = None) -> logging.Logger:
+def get_logger(name: str, level: Optional[Union[int, str]] = None) -> logging.Logger:
     """
     Get a logger with the specified name and level.
 
@@ -135,9 +131,7 @@ class LoggerAdapter(logging.LoggerAdapter):
 
 
 def get_contextual_logger(
-    name: str,
-    context: Dict[str, Any],
-    level: Optional[Union[int, str]] = None
+    name: str, context: Dict[str, Any], level: Optional[Union[int, str]] = None
 ) -> LoggerAdapter:
     """
     Get a logger with context information.
@@ -165,7 +159,7 @@ class ProgressLogger:
         total: int,
         description: str = "Progress",
         log_interval: int = 10,
-        level: int = logging.INFO
+        level: int = logging.INFO,
     ):
         """
         Initialize the progress logger.
@@ -190,6 +184,7 @@ class ProgressLogger:
     def __enter__(self):
         """Start tracking progress."""
         import time
+
         self.start_time = time.time()
         self.logger.log(self.level, f"{self.description} started")
         return self
@@ -197,10 +192,13 @@ class ProgressLogger:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Log final progress."""
         import time
+
         if exc_type is None:
             duration = time.time() - self.start_time
             self.logger.log(
-                self.level, f"{self.description} completed: {self.count}/{self.total} items in {duration:.2f}s")
+                self.level,
+                f"{self.description} completed: {self.count}/{self.total} items in {duration:.2f}s",
+            )
         else:
             self.logger.error(f"{self.description} failed: {exc_val}")
 
@@ -217,14 +215,16 @@ class ProgressLogger:
 
         if self.total <= 0:
             # No total count, just log the current count
-            self.logger.log(
-                self.level, f"{self.description}: {self.count} items")
+            self.logger.log(self.level, f"{self.description}: {self.count} items")
             return
 
         percent = (self.count * 100) // self.total
 
         # Log if we've passed another interval or reached 100%
-        if percent >= self.last_logged_percent + self.log_interval or self.count >= self.total:
+        if (
+            percent >= self.last_logged_percent + self.log_interval
+            or self.count >= self.total
+        ):
             self.last_logged_percent = percent
 
             # Calculate time remaining
@@ -238,15 +238,15 @@ class ProgressLogger:
 
                     self.logger.log(
                         self.level,
-                        f"{self.description}: {self.count}/{self.total} ({percent}%) - {items_per_sec:.2f} items/s, {remaining_secs:.2f}s remaining"
+                        f"{self.description}: {self.count}/{self.total} ({percent}%) - {items_per_sec:.2f} items/s, {remaining_secs:.2f}s remaining",
                     )
                 else:
                     self.logger.log(
                         self.level,
-                        f"{self.description}: {self.count}/{self.total} ({percent}%)"
+                        f"{self.description}: {self.count}/{self.total} ({percent}%)",
                     )
             else:
                 self.logger.log(
                     self.level,
-                    f"{self.description}: {self.count}/{self.total} ({percent}%)"
+                    f"{self.description}: {self.count}/{self.total} ({percent}%)",
                 )

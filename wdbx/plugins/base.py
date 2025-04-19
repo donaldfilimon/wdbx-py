@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class PluginError(Exception):
     """Exception raised when a plugin operation fails."""
+
     pass
 
 
@@ -99,8 +100,7 @@ class WDBXPlugin(ABC):
         Raises:
             PluginError: If embedding creation fails
         """
-        raise PluginError(
-            f"Plugin {self.name} does not implement create_embedding")
+        raise PluginError(f"Plugin {self.name} does not implement create_embedding")
 
     def register_commands(self) -> None:
         """
@@ -195,8 +195,9 @@ class PluginManager:
         self.plugins = {}
         self.logger = logging.getLogger("wdbx.plugins")
 
-    def load_plugins(self, plugin_dir: Optional[str] = None,
-                     auto_discover: bool = True) -> Dict[str, WDBXPlugin]:
+    def load_plugins(
+        self, plugin_dir: Optional[str] = None, auto_discover: bool = True
+    ) -> Dict[str, WDBXPlugin]:
         """
         Load plugins from the plugin directory.
 
@@ -224,7 +225,9 @@ class PluginManager:
         for file_path in plugin_dir.glob("*.py"):
             # Skip __init__.py, base.py, and other non-plugin files
             if file_path.name in [
-                    "__init__.py", "base.py"] or file_path.name.startswith("_"):
+                "__init__.py",
+                "base.py",
+            ] or file_path.name.startswith("_"):
                 continue
 
             try:
@@ -245,7 +248,8 @@ class PluginManager:
                 except ImportError:
                     # Try importing as a relative module
                     spec = importlib.util.spec_from_file_location(
-                        module_name, file_path)
+                        module_name, file_path
+                    )
                     module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(module)
 
@@ -255,9 +259,9 @@ class PluginManager:
 
                     # Check if it's a plugin class
                     if (
-                        inspect.isclass(attr) and
-                        issubclass(attr, WDBXPlugin) and
-                        attr is not WDBXPlugin
+                        inspect.isclass(attr)
+                        and issubclass(attr, WDBXPlugin)
+                        and attr is not WDBXPlugin
                     ):
                         # Create plugin instance
                         plugin = attr(self.wdbx)
@@ -266,22 +270,21 @@ class PluginManager:
                         # Register plugin
                         self.plugins[plugin_name] = plugin
                         self.logger.info(
-                            f"Loaded plugin: {plugin_name} (v{plugin.version})")
+                            f"Loaded plugin: {plugin_name} (v{plugin.version})"
+                        )
                         break
                 else:
-                    self.logger.warning(
-                        f"No plugin class found in {module_path}")
+                    self.logger.warning(f"No plugin class found in {module_path}")
             except Exception as e:
-                self.logger.error(
-                    f"Error loading plugin from {file_path}: {e}")
+                self.logger.error(f"Error loading plugin from {file_path}: {e}")
 
         # Load external plugins if auto-discover is enabled
         if auto_discover:
             try:
                 # Check for plugins in PYTHONPATH
                 import pkg_resources
-                for entry_point in pkg_resources.iter_entry_points(
-                        "wdbx.plugins"):
+
+                for entry_point in pkg_resources.iter_entry_points("wdbx.plugins"):
                     try:
                         plugin_class = entry_point.load()
                         plugin = plugin_class(self.wdbx)
@@ -290,10 +293,12 @@ class PluginManager:
                         # Register plugin
                         self.plugins[plugin_name] = plugin
                         self.logger.info(
-                            f"Loaded external plugin: {plugin_name} (v{plugin.version})")
+                            f"Loaded external plugin: {plugin_name} (v{plugin.version})"
+                        )
                     except Exception as e:
                         self.logger.error(
-                            f"Error loading external plugin {entry_point.name}: {e}")
+                            f"Error loading external plugin {entry_point.name}: {e}"
+                        )
             except Exception as e:
                 self.logger.error(f"Error loading external plugins: {e}")
 
@@ -315,8 +320,7 @@ class PluginManager:
             try:
                 init_tasks.append(plugin.initialize())
             except Exception as e:
-                self.logger.error(
-                    f"Error initializing plugin {plugin_name}: {e}")
+                self.logger.error(f"Error initializing plugin {plugin_name}: {e}")
 
         # Wait for all plugins to initialize
         if init_tasks:
@@ -338,8 +342,7 @@ class PluginManager:
             try:
                 shutdown_tasks.append(plugin.shutdown())
             except Exception as e:
-                self.logger.error(
-                    f"Error shutting down plugin {plugin_name}: {e}")
+                self.logger.error(f"Error shutting down plugin {plugin_name}: {e}")
 
         # Wait for all plugins to shut down
         if shutdown_tasks:
@@ -374,8 +377,7 @@ class PluginManager:
             return False
 
         self.plugins[plugin_name] = plugin
-        self.logger.info(
-            f"Registered plugin: {plugin_name} (v{plugin.version})")
+        self.logger.info(f"Registered plugin: {plugin_name} (v{plugin.version})")
         return True
 
     def unregister_plugin(self, plugin_name: str) -> bool:

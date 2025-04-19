@@ -50,6 +50,7 @@ async def wdbx_instance(temp_dir, config):
     # Clean up
     await wdbx.shutdown()
 
+
 # Test configuration
 
 
@@ -69,12 +70,14 @@ def test_config_environment(monkeypatch):
 
 def test_config_type_conversion():
     """Test configuration type conversion."""
-    config = WDBXConfig({
-        "WDBX_INT_OPTION": "42",
-        "WDBX_FLOAT_OPTION": "3.14",
-        "WDBX_BOOL_OPTION": "true",
-        "WDBX_LIST_OPTION": "[1, 2, 3]",
-    })
+    config = WDBXConfig(
+        {
+            "WDBX_INT_OPTION": "42",
+            "WDBX_FLOAT_OPTION": "3.14",
+            "WDBX_BOOL_OPTION": "true",
+            "WDBX_LIST_OPTION": "[1, 2, 3]",
+        }
+    )
 
     assert config.get_typed("WDBX_INT_OPTION", int) == 42
     assert config.get_typed("WDBX_FLOAT_OPTION", float) == 3.14
@@ -83,6 +86,7 @@ def test_config_type_conversion():
 
     # Test default value
     assert config.get_typed("NONEXISTENT", int, 99) == 99
+
 
 # Test WDBX instance creation
 
@@ -100,6 +104,7 @@ def test_wdbx_creation(temp_dir, config):
     assert wdbx.num_shards == 2
     assert wdbx.data_dir == Path(temp_dir)
     assert wdbx.config.get("WDBX_TEST_OPTION") == "test_value"
+
 
 # Test vector operations
 
@@ -193,7 +198,7 @@ async def test_vector_batch_operations(wdbx_instance):
     # Create multiple vectors
     vectors = {}
     for i in range(10):
-        vector = [i/10, (i+1)/10, (i+2)/10, (i+3)/10]
+        vector = [i / 10, (i + 1) / 10, (i + 2) / 10, (i + 3) / 10]
         vectors[f"vec_{i}"] = vector
 
     # Create metadata for each vector
@@ -218,9 +223,7 @@ async def test_vector_batch_operations(wdbx_instance):
 
     # Test metadata filtering
     filtered_results = wdbx_instance.vector_search(
-        search_vector,
-        limit=10,
-        filter_metadata={"index": {"$lt": 3}}
+        search_vector, limit=10, filter_metadata={"index": {"$lt": 3}}
     )
     assert len(filtered_results) == 3
     for _, _, meta in filtered_results:
@@ -230,6 +233,7 @@ async def test_vector_batch_operations(wdbx_instance):
     count = wdbx_instance.clear()
     assert count == 10
     assert wdbx_instance.count_vectors() == 0
+
 
 # Test error handling
 
@@ -251,9 +255,9 @@ async def test_error_handling(wdbx_instance):
     assert success is False
 
     # Test updating nonexistent metadata
-    success = wdbx_instance.update_metadata(
-        "nonexistent_id", {"test": "value"})
+    success = wdbx_instance.update_metadata("nonexistent_id", {"test": "value"})
     assert success is False
+
 
 # Test persistence
 
@@ -307,6 +311,7 @@ async def test_persistence(temp_dir, config):
     # Clean up
     await wdbx2.shutdown()
 
+
 # Test statistics
 
 
@@ -315,7 +320,7 @@ async def test_statistics(wdbx_instance):
     """Test getting statistics about the database."""
     # Store some vectors
     for i in range(5):
-        vector = [i/10, (i+1)/10, (i+2)/10, (i+3)/10]
+        vector = [i / 10, (i + 1) / 10, (i + 2) / 10, (i + 3) / 10]
         metadata = {"index": i}
         wdbx_instance.vector_store(vector, metadata)
 

@@ -60,9 +60,10 @@ class ShardManager:
 
         # Shard allocation
         self.shard_allocation = {}  # shard_id -> node_id
-        self.shard_replicas = {}    # shard_id -> list of node_ids
-        self.replication_factor = int(self.config.get(
-            "DISTRIBUTED_REPLICATION_FACTOR", 1))
+        self.shard_replicas = {}  # shard_id -> list of node_ids
+        self.replication_factor = int(
+            self.config.get("DISTRIBUTED_REPLICATION_FACTOR", 1)
+        )
 
         # Node information
         self.node_id = self._generate_node_id()
@@ -76,7 +77,8 @@ class ShardManager:
         self.thread_pool = ThreadPoolExecutor(max_workers=4)
 
         logger.info(
-            f"Initialized ShardManager with {num_shards} shards, node_id={self.node_id}")
+            f"Initialized ShardManager with {num_shards} shards, node_id={self.node_id}"
+        )
 
     def _generate_node_id(self) -> str:
         """Generate a unique node ID based on hostname and timestamp."""
@@ -133,7 +135,7 @@ class ShardManager:
 
         if allocation_file.exists():
             try:
-                with open(allocation_file, 'r') as f:
+                with open(allocation_file, "r") as f:
                     allocation_data = json.load(f)
 
                 self.shard_allocation = allocation_data.get("allocation", {})
@@ -142,12 +144,15 @@ class ShardManager:
 
                 # Convert keys from strings to integers
                 self.shard_allocation = {
-                    int(k): v for k, v in self.shard_allocation.items()}
+                    int(k): v for k, v in self.shard_allocation.items()
+                }
                 self.shard_replicas = {
-                    int(k): v for k, v in self.shard_replicas.items()}
+                    int(k): v for k, v in self.shard_replicas.items()
+                }
 
                 logger.debug(
-                    f"Loaded shard allocation for {len(self.shard_allocation)} shards")
+                    f"Loaded shard allocation for {len(self.shard_allocation)} shards"
+                )
             except Exception as e:
                 logger.error(f"Error loading shard allocation: {e}")
                 # Initialize empty allocation
@@ -163,14 +168,15 @@ class ShardManager:
             allocation_data = {
                 "allocation": self.shard_allocation,
                 "replicas": self.shard_replicas,
-                "nodes": self.nodes
+                "nodes": self.nodes,
             }
 
-            with open(allocation_file, 'w') as f:
+            with open(allocation_file, "w") as f:
                 json.dump(allocation_data, f, indent=2)
 
             logger.debug(
-                f"Saved shard allocation for {len(self.shard_allocation)} shards")
+                f"Saved shard allocation for {len(self.shard_allocation)} shards"
+            )
         except Exception as e:
             logger.error(f"Error saving shard allocation: {e}")
 
@@ -182,10 +188,18 @@ class ShardManager:
 
         try:
             # Create server in a separate process
-            ctx = mp.get_context('spawn')
+            ctx = mp.get_context("spawn")
             self.server_queue = ctx.Queue()
-            self.server_process = ctx.Process(target=self._run_server, args=(
-                self.host, self.port, self.auth_enabled, self.auth_key, self.server_queue))
+            self.server_process = ctx.Process(
+                target=self._run_server,
+                args=(
+                    self.host,
+                    self.port,
+                    self.auth_enabled,
+                    self.auth_key,
+                    self.server_queue,
+                ),
+            )
             self.server_process.start()
 
             # Wait for server to start
@@ -194,8 +208,7 @@ class ShardManager:
                 logger.info(f"Server started on {self.host}:{self.port}")
                 self.server = server_info
             else:
-                logger.error(
-                    f"Failed to start server: {server_info.get('error')}")
+                logger.error(f"Failed to start server: {server_info.get('error')}")
                 self.server_process.terminate()
                 self.server_process = None
         except Exception as e:
@@ -233,8 +246,10 @@ class ShardManager:
                         client_socket, addr = server_socket.accept()
                         client_socket.setblocking(False)
                         selector.register(
-                            client_socket, selectors.EVENT_READ,
-                            data={"addr": addr, "buffer": b""})
+                            client_socket,
+                            selectors.EVENT_READ,
+                            data={"addr": addr, "buffer": b""},
+                        )
                     else:
                         # Existing connection
                         client_socket = key.fileobj
@@ -249,96 +264,117 @@ class ShardManager:
                                 # Process complete messages
                                 while len(data["buffer"]) >= 4:
                                     # Get message length
-                                    msg_len = struct.unpack(
-                                        "!I", data["buffer"][:4])[0]
+                                    msg_len = struct.unpack("!I", data["buffer"][:4])[0]
 
                                     # Check if we have a complete message
                                     if len(data["buffer"]) >= msg_len + 4:
                                         # Extract message
-                                        message = data["buffer"][4:msg_len+4]
-                                        data["buffer"] = data["buffer"][
-                                            msg_len + 4:]
+                                        message = data["buffer"][4 : msg_len + 4]
+                                        data["buffer"] = data["buffer"][msg_len + 4 :]
 
                                         # Process message
                                         try:
-                                            decoded_message = pickle.loads(
-                                                message)
+                                            decoded_message = pickle.loads(message)
 
                                             # Handle authentication
                                             if auth_enabled and not data.get(
-                                                    "authenticated", False):
-                                                if decoded_message.get("type") == "auth" and decoded_message.get("key") == auth_key:
+                                                "authenticated", False
+                                            ):
+                                                if (
+                                                    decoded_message.get("type")
+                                                    == "auth"
+                                                    and decoded_message.get("key")
+                                                    == auth_key
+                                                ):
                                                     data["authenticated"] = True
                                                     response = {
                                                         "type": "auth_response",
-                                                        "status": "success"}
+                                                        "status": "success",
+                                                    }
                                                 else:
                                                     response = {
-                                                        "type": "auth_response", "status": "failure", "error": "Authentication failed"}
+                                                        "type": "auth_response",
+                                                        "status": "failure",
+                                                        "error": "Authentication failed",
+                                                    }
 
                                                 # Send response
-                                                response_bytes = pickle.dumps(
-                                                    response)
+                                                response_bytes = pickle.dumps(response)
                                                 header = struct.pack(
-                                                    "!I", len(response_bytes))
+                                                    "!I", len(response_bytes)
+                                                )
                                                 client_socket.sendall(
-                                                    header + response_bytes)
+                                                    header + response_bytes
+                                                )
 
                                                 # If authentication failed, close connection
                                                 if response["status"] == "failure":
-                                                    selector.unregister(
-                                                        client_socket)
+                                                    selector.unregister(client_socket)
                                                     client_socket.close()
                                                     continue
 
                                             # If authentication is required but client is not authenticated
-                                            elif auth_enabled and not data.get("authenticated", False):
+                                            elif auth_enabled and not data.get(
+                                                "authenticated", False
+                                            ):
                                                 # Send error response
                                                 response = {
-                                                    "type": "error", "error": "Authentication required"}
-                                                response_bytes = pickle.dumps(
-                                                    response)
+                                                    "type": "error",
+                                                    "error": "Authentication required",
+                                                }
+                                                response_bytes = pickle.dumps(response)
                                                 header = struct.pack(
-                                                    "!I", len(response_bytes))
+                                                    "!I", len(response_bytes)
+                                                )
                                                 client_socket.sendall(
-                                                    header + response_bytes)
+                                                    header + response_bytes
+                                                )
 
                                                 # Close connection
-                                                selector.unregister(
-                                                    client_socket)
+                                                selector.unregister(client_socket)
                                                 client_socket.close()
                                                 continue
 
                                             # Handle message
                                             if decoded_message.get("type") == "ping":
                                                 response = {"type": "pong"}
-                                            elif decoded_message.get("type") == "shutdown":
+                                            elif (
+                                                decoded_message.get("type")
+                                                == "shutdown"
+                                            ):
                                                 response = {
                                                     "type": "shutdown_response",
-                                                    "status": "success"}
+                                                    "status": "success",
+                                                }
                                                 running = False
                                             else:
                                                 # Unknown message type
                                                 response = {
-                                                    "type": "error", "error": f"Unknown message type: {decoded_message.get('type')}"}
+                                                    "type": "error",
+                                                    "error": f"Unknown message type: {decoded_message.get('type')}",
+                                                }
 
                                             # Send response
-                                            response_bytes = pickle.dumps(
-                                                response)
+                                            response_bytes = pickle.dumps(response)
                                             header = struct.pack(
-                                                "!I", len(response_bytes))
+                                                "!I", len(response_bytes)
+                                            )
                                             client_socket.sendall(
-                                                header + response_bytes)
+                                                header + response_bytes
+                                            )
                                         except Exception as e:
                                             # Send error response
                                             response = {
-                                                "type": "error", "error": str(e)}
-                                            response_bytes = pickle.dumps(
-                                                response)
+                                                "type": "error",
+                                                "error": str(e),
+                                            }
+                                            response_bytes = pickle.dumps(response)
                                             header = struct.pack(
-                                                "!I", len(response_bytes))
+                                                "!I", len(response_bytes)
+                                            )
                                             client_socket.sendall(
-                                                header + response_bytes)
+                                                header + response_bytes
+                                            )
                             else:
                                 # Connection closed by client
                                 selector.unregister(client_socket)
@@ -392,7 +428,11 @@ class ShardManager:
         except Exception as e:
             logger.error(f"Error stopping server: {e}")
             # Force terminate server process
-            if hasattr(self, 'server_process') and self.server_process and self.server_process.is_alive():
+            if (
+                hasattr(self, "server_process")
+                and self.server_process
+                and self.server_process.is_alive()
+            ):
                 self.server_process.terminate()
             self.server = None
             self.server_process = None
@@ -406,9 +446,11 @@ class ShardManager:
         try:
             # Get coordinator address
             coordinator_host = self.config.get(
-                "DISTRIBUTED_COORDINATOR_HOST", "localhost")
-            coordinator_port = int(self.config.get(
-                "DISTRIBUTED_COORDINATOR_PORT", 7777))
+                "DISTRIBUTED_COORDINATOR_HOST", "localhost"
+            )
+            coordinator_port = int(
+                self.config.get("DISTRIBUTED_COORDINATOR_PORT", 7777)
+            )
 
             # Create client socket
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -428,8 +470,7 @@ class ShardManager:
                 response = pickle.loads(message)
 
                 if response.get("status") != "success":
-                    raise ValueError(
-                        f"Authentication failed: {response.get('error')}")
+                    raise ValueError(f"Authentication failed: {response.get('error')}")
 
             # Register with coordinator
             register_message = {
@@ -440,7 +481,7 @@ class ShardManager:
                 "capabilities": {
                     "storage": True,
                     "compute": True,
-                }
+                },
             }
             register_bytes = pickle.dumps(register_message)
             header = struct.pack("!I", len(register_bytes))
@@ -453,22 +494,21 @@ class ShardManager:
             response = pickle.loads(message)
 
             if response.get("status") != "success":
-                raise ValueError(
-                    f"Registration failed: {response.get('error')}")
+                raise ValueError(f"Registration failed: {response.get('error')}")
 
             # Store client socket
             self.client = {
                 "socket": client_socket,
                 "host": coordinator_host,
-                "port": coordinator_port
+                "port": coordinator_port,
             }
 
             logger.info(
-                f"Connected to coordinator at {coordinator_host}:{coordinator_port}")
+                f"Connected to coordinator at {coordinator_host}:{coordinator_port}"
+            )
         except Exception as e:
             logger.error(f"Error connecting to coordinator: {e}")
-            if hasattr(self, 'client') and self.client and self.client.get(
-                    "socket"):
+            if hasattr(self, "client") and self.client and self.client.get("socket"):
                 self.client["socket"].close()
             self.client = None
 
@@ -479,10 +519,7 @@ class ShardManager:
 
         try:
             # Send unregister message
-            unregister_message = {
-                "type": "unregister",
-                "node_id": self.node_id
-            }
+            unregister_message = {"type": "unregister", "node_id": self.node_id}
             unregister_bytes = pickle.dumps(unregister_message)
             header = struct.pack("!I", len(unregister_bytes))
             self.client["socket"].sendall(header + unregister_bytes)
@@ -500,8 +537,7 @@ class ShardManager:
         except Exception as e:
             logger.error(f"Error disconnecting from coordinator: {e}")
             # Force close socket
-            if hasattr(self, 'client') and self.client and self.client.get(
-                    "socket"):
+            if hasattr(self, "client") and self.client and self.client.get("socket"):
                 try:
                     self.client["socket"].close()
                 except:
@@ -516,8 +552,10 @@ class ShardManager:
 
         # Get active nodes
         active_nodes = [
-            node_id for node_id, node in self.nodes.items()
-            if node.get("status") == "active"]
+            node_id
+            for node_id, node in self.nodes.items()
+            if node.get("status") == "active"
+        ]
 
         # If no active nodes, allocate to self
         if not active_nodes:
@@ -529,7 +567,7 @@ class ShardManager:
                 "capabilities": {
                     "storage": True,
                     "compute": True,
-                }
+                },
             }
 
         # Allocate primary shards
@@ -548,7 +586,7 @@ class ShardManager:
                     node_shard_counts[node_id] += 1
 
             # Find node with fewest shards
-            min_shards = float('inf')
+            min_shards = float("inf")
             min_node = None
             for node_id, count in node_shard_counts.items():
                 if count < min_shards:
@@ -579,9 +617,11 @@ class ShardManager:
 
                 # Find eligible nodes (not primary and not already a replica)
                 eligible_nodes = [
-                    node_id for node_id in active_nodes
-                    if node_id != primary_node and node_id
-                    not in self.shard_replicas[shard_id]]
+                    node_id
+                    for node_id in active_nodes
+                    if node_id != primary_node
+                    and node_id not in self.shard_replicas[shard_id]
+                ]
 
                 if not eligible_nodes:
                     break
@@ -597,7 +637,7 @@ class ShardManager:
                             node_replica_counts[node_id] += 1
 
                 # Find node with fewest replicas
-                min_replicas = float('inf')
+                min_replicas = float("inf")
                 min_node = None
                 for node_id, count in node_replica_counts.items():
                     if count < min_replicas:
@@ -608,7 +648,8 @@ class ShardManager:
                 if min_node:
                     self.shard_replicas[shard_id].append(min_node)
                     logger.debug(
-                        f"Allocated replica for shard {shard_id} to node {min_node}")
+                        f"Allocated replica for shard {shard_id} to node {min_node}"
+                    )
 
         # Save allocation
         await self._save_shard_allocation()
@@ -634,7 +675,7 @@ class ShardManager:
             "primary_node": primary_node,
             "replica_nodes": replica_nodes,
             "primary_node_info": self.nodes.get(primary_node, {}),
-            "replica_node_info": [self.nodes.get(node, {}) for node in replica_nodes]
+            "replica_node_info": [self.nodes.get(node, {}) for node in replica_nodes],
         }
 
     def is_local_shard(self, shard_id: int) -> bool:
@@ -655,7 +696,9 @@ class ShardManager:
 
         return primary_node == self.node_id or self.node_id in replica_nodes
 
-    async def forward_request(self, shard_id: int, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def forward_request(
+        self, shard_id: int, request: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Forward a request to the node responsible for a shard.
 
@@ -686,12 +729,13 @@ class ShardManager:
         # Forward request to primary node
         try:
             logger.debug(
-                f"Forwarding request for shard {shard_id} to node {primary_node}")
+                f"Forwarding request for shard {shard_id} to node {primary_node}"
+            )
             # Create client socket
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.connect(
-                (primary_node_info["host"],
-                 primary_node_info["port"]))
+                (primary_node_info["host"], primary_node_info["port"])
+            )
 
             # Authenticate if required
             if self.auth_enabled:
@@ -707,14 +751,13 @@ class ShardManager:
                 response = pickle.loads(message)
 
                 if response.get("status") != "success":
-                    raise ValueError(
-                        f"Authentication failed: {response.get('error')}")
+                    raise ValueError(f"Authentication failed: {response.get('error')}")
 
             # Send request
             request_message = {
                 "type": "shard_request",
                 "shard_id": shard_id,
-                "request": request
+                "request": request,
             }
             request_bytes = pickle.dumps(request_message)
             header = struct.pack("!I", len(request_bytes))
@@ -731,22 +774,19 @@ class ShardManager:
 
             return response
         except Exception as e:
-            logger.error(
-                f"Error forwarding request to node {primary_node}: {e}")
+            logger.error(f"Error forwarding request to node {primary_node}: {e}")
 
             # Try replicas
             for replica_node, replica_info in zip(
-                    shard_info["replica_nodes"],
-                    shard_info["replica_node_info"]):
+                shard_info["replica_nodes"], shard_info["replica_node_info"]
+            ):
                 try:
                     logger.debug(
-                        f"Trying replica node {replica_node} for shard {shard_id}")
+                        f"Trying replica node {replica_node} for shard {shard_id}"
+                    )
                     # Create client socket
-                    client_socket = socket.socket(
-                        socket.AF_INET, socket.SOCK_STREAM)
-                    client_socket.connect(
-                        (replica_info["host"],
-                         replica_info["port"]))
+                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    client_socket.connect((replica_info["host"], replica_info["port"]))
 
                     # Authenticate if required
                     if self.auth_enabled:
@@ -763,13 +803,14 @@ class ShardManager:
 
                         if response.get("status") != "success":
                             raise ValueError(
-                                f"Authentication failed: {response.get('error')}")
+                                f"Authentication failed: {response.get('error')}"
+                            )
 
                     # Send request
                     request_message = {
                         "type": "shard_request",
                         "shard_id": shard_id,
-                        "request": request
+                        "request": request,
                     }
                     request_bytes = pickle.dumps(request_message)
                     header = struct.pack("!I", len(request_bytes))
@@ -787,7 +828,8 @@ class ShardManager:
                     return response
                 except Exception as replica_error:
                     logger.error(
-                        f"Error forwarding request to replica node {replica_node}: {replica_error}")
+                        f"Error forwarding request to replica node {replica_node}: {replica_error}"
+                    )
 
             # All nodes failed
             raise ValueError(f"Failed to forward request for shard {shard_id}")
@@ -805,7 +847,13 @@ class ShardManager:
             "num_shards": self.num_shards,
             "replication_factor": self.replication_factor,
             "num_nodes": len(self.nodes),
-            "active_nodes": len([node for node, info in self.nodes.items() if info.get("status") == "active"]),
+            "active_nodes": len(
+                [
+                    node
+                    for node, info in self.nodes.items()
+                    if info.get("status") == "active"
+                ]
+            ),
             "shards_per_node": self._get_shards_per_node(),
         }
 

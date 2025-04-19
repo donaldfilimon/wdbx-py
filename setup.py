@@ -6,17 +6,14 @@ from Cython.Build import cythonize
 
 
 def get_requirements():
-    with open(Path('requirements.txt'), 'r') as f:
+    with open(Path("requirements.txt"), "r") as f:
         return [line.strip() for line in f if line.strip()]
 
 
 def get_extension_modules():
     """Returns a list of all Cython extension modules"""
     return [
-        Extension(
-            "wdbx.example_module",
-            [str(Path("wdbx") / "example_module.pyx")]
-        )
+        Extension("wdbx.example_module", [str(Path("wdbx") / "example_module.pyx")])
     ]
 
 
@@ -30,7 +27,7 @@ class CustomBuildExt(build_ext):
 
 class CustomInstall(install):
     def run(self):
-        self.run_command('build_ext')
+        self.run_command("build_ext")
         install.run(self)
 
 
@@ -40,10 +37,10 @@ setup(
     packages=find_packages(),
     ext_modules=cythonize(get_extension_modules()),
     install_requires=get_requirements(),
-    setup_requires=['cython'],
+    setup_requires=["cython"],
     cmdclass={
-        'build_ext': CustomBuildExt,
-        'install': CustomInstall,
+        "build_ext": CustomBuildExt,
+        "install": CustomInstall,
     },
     author="WDBX Team",
     author_email="wdbx@team.com",
@@ -52,6 +49,6 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
-        "Topic :: Software Development :: Libraries :: Python Modules"
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )

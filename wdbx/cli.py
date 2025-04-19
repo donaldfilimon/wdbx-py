@@ -57,35 +57,42 @@ class WDBXCLI:
             "Display help information",
             {
                 "command": "Command to get help for",
-            }
+            },
         )
 
         # Version command
         self.register_command(
-            "version",
-            self._cmd_version,
-            "Display version information",
-            {}
+            "version", self._cmd_version, "Display version information", {}
         )
 
         # Store command
         self.register_command(
-            "store", self._cmd_store, "Store a vector",
-            {"--id": "Vector ID", "--vector": "Vector data (JSON array)",
-             "--metadata": "Metadata (JSON object)",
-             "--from-file": "Load vector from file",
-             "--from-text": "Create vector from text using an embedding plugin", })
+            "store",
+            self._cmd_store,
+            "Store a vector",
+            {
+                "--id": "Vector ID",
+                "--vector": "Vector data (JSON array)",
+                "--metadata": "Metadata (JSON object)",
+                "--from-file": "Load vector from file",
+                "--from-text": "Create vector from text using an embedding plugin",
+            },
+        )
 
         # Search command
         self.register_command(
-            "search", self._cmd_search, "Search for similar vectors",
-            {"--vector": "Query vector (JSON array)",
-             "--from-file": "Load query vector from file",
-             "--from-text":
-             "Create query vector from text using an embedding plugin",
-             "--limit": "Maximum number of results",
-             "--threshold": "Minimum similarity threshold",
-             "--filter": "Metadata filter (JSON object)", })
+            "search",
+            self._cmd_search,
+            "Search for similar vectors",
+            {
+                "--vector": "Query vector (JSON array)",
+                "--from-file": "Load query vector from file",
+                "--from-text": "Create query vector from text using an embedding plugin",
+                "--limit": "Maximum number of results",
+                "--threshold": "Minimum similarity threshold",
+                "--filter": "Metadata filter (JSON object)",
+            },
+        )
 
         # Get command
         self.register_command(
@@ -94,7 +101,7 @@ class WDBXCLI:
             "Get a vector by ID",
             {
                 "id": "Vector ID",
-            }
+            },
         )
 
         # Delete command
@@ -104,7 +111,7 @@ class WDBXCLI:
             "Delete a vector",
             {
                 "id": "Vector ID",
-            }
+            },
         )
 
         # Update metadata command
@@ -116,15 +123,12 @@ class WDBXCLI:
                 "id": "Vector ID",
                 "--metadata": "New metadata (JSON object)",
                 "--from-file": "Load metadata from file",
-            }
+            },
         )
 
         # Stats command
         self.register_command(
-            "stats",
-            self._cmd_stats,
-            "Display database statistics",
-            {}
+            "stats", self._cmd_stats, "Display database statistics", {}
         )
 
         # Clear command
@@ -134,15 +138,12 @@ class WDBXCLI:
             "Clear the database",
             {
                 "--force": "Skip confirmation prompt",
-            }
+            },
         )
 
         # List plugins command
         self.register_command(
-            "plugins",
-            self._cmd_plugins,
-            "List available plugins",
-            {}
+            "plugins", self._cmd_plugins, "List available plugins", {}
         )
 
         # Plugin info command
@@ -152,7 +153,7 @@ class WDBXCLI:
             "Display plugin information",
             {
                 "name": "Plugin name",
-            }
+            },
         )
 
         # Start API server command
@@ -167,7 +168,7 @@ class WDBXCLI:
                 "--auth-key": "Authentication key",
                 "--cors": "Enable CORS",
                 "--cors-origins": "Allowed CORS origins (comma-separated)",
-            }
+            },
         )
 
     def _register_plugin_commands(self):
@@ -178,11 +179,12 @@ class WDBXCLI:
                     plugin.register_commands()
                 except Exception as e:
                     logger.error(
-                        f"Error registering commands for plugin {plugin_name}: {e}")
+                        f"Error registering commands for plugin {plugin_name}: {e}"
+                    )
 
     def register_command(
-            self, name: str, handler, description: str,
-            options: Dict[str, str] = None):
+        self, name: str, handler, description: str, options: Dict[str, str] = None
+    ):
         """
         Register a command.
 
@@ -257,21 +259,18 @@ class WDBXCLI:
         Args:
             args: Command-line arguments
         """
-        parser = argparse.ArgumentParser(
-            description="WDBX Command-line Interface")
+        parser = argparse.ArgumentParser(description="WDBX Command-line Interface")
         parser.add_argument(
-            "--version", action="store_true",
-            help="Display version information")
-        parser.add_argument("--debug", action="store_true",
-                            help="Enable debug logging")
+            "--version", action="store_true", help="Display version information"
+        )
+        parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
         # Add subparsers for commands
         subparsers = parser.add_subparsers(dest="command", help="Command")
 
         # Add each command as a subparser
         for cmd_name, cmd_info in self.commands.items():
-            cmd_parser = subparsers.add_parser(
-                cmd_name, help=cmd_info["description"])
+            cmd_parser = subparsers.add_parser(cmd_name, help=cmd_info["description"])
 
             # Add command options
             for opt_name, opt_desc in cmd_info["options"].items():
@@ -287,8 +286,7 @@ class WDBXCLI:
 
         # Set up logging
         log_level = logging.DEBUG if parsed_args.debug else logging.INFO
-        logging.basicConfig(
-            level=log_level, format="%(levelname)s: %(message)s")
+        logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
 
         # Handle version flag
         if parsed_args.version:
@@ -300,8 +298,7 @@ class WDBXCLI:
             # Convert namespace to string arguments
             cmd_args = []
             for key, value in vars(parsed_args).items():
-                if key not in [
-                        "command", "version", "debug"] and value is not None:
+                if key not in ["command", "version", "debug"] and value is not None:
                     if isinstance(value, bool) and value:
                         cmd_args.append(f"--{key}")
                     else:
@@ -333,7 +330,8 @@ class WDBXCLI:
             for cmd_name, cmd_info in self.commands.items():
                 print(f"  {cmd_name}: {cmd_info['description']}")
             print(
-                "\nType 'help <command>' for more information about a specific command.")
+                "\nType 'help <command>' for more information about a specific command."
+            )
 
     async def _cmd_version(self, args: str):
         """Command handler for the version command."""
@@ -356,8 +354,8 @@ class WDBXCLI:
         parser.add_argument("--metadata", help="Metadata (JSON object)")
         parser.add_argument("--from-file", help="Load vector from file")
         parser.add_argument(
-            "--from-text",
-            help="Create vector from text using an embedding plugin")
+            "--from-text", help="Create vector from text using an embedding plugin"
+        )
 
         try:
             parsed_args = parser.parse_args(args.split())
@@ -378,7 +376,7 @@ class WDBXCLI:
         elif parsed_args.from_file:
             # Load vector from file
             try:
-                with open(parsed_args.from_file, 'r') as f:
+                with open(parsed_args.from_file, "r") as f:
                     vector = json.load(f)
             except Exception as e:
                 print(f"Error loading vector from file: {e}")
@@ -387,15 +385,18 @@ class WDBXCLI:
         elif parsed_args.from_text:
             # Create vector from text using an embedding plugin
             for plugin_name in [
-                    "openai", "ollama", "huggingface", "sentencetransformers"]:
+                "openai",
+                "ollama",
+                "huggingface",
+                "sentencetransformers",
+            ]:
                 if plugin_name in self.wdbx.plugins:
                     plugin = self.wdbx.plugins[plugin_name]
                     try:
                         vector = await plugin.create_embedding(parsed_args.from_text)
                         break
                     except Exception as e:
-                        print(
-                            f"Error creating embedding with {plugin_name}: {e}")
+                        print(f"Error creating embedding with {plugin_name}: {e}")
                         continue
 
             if vector is None:
@@ -419,7 +420,9 @@ class WDBXCLI:
 
         # Store vector
         try:
-            vector_id = await self.wdbx.vector_store_async(vector, metadata, parsed_args.id)
+            vector_id = await self.wdbx.vector_store_async(
+                vector, metadata, parsed_args.id
+            )
             print(f"Vector stored with ID: {vector_id}")
         except Exception as e:
             print(f"Error storing vector: {e}")
@@ -429,18 +432,19 @@ class WDBXCLI:
         import argparse
 
         # Parse arguments
-        parser = argparse.ArgumentParser(
-            description="Search for similar vectors")
+        parser = argparse.ArgumentParser(description="Search for similar vectors")
         parser.add_argument("--vector", help="Query vector (JSON array)")
         parser.add_argument("--from-file", help="Load query vector from file")
         parser.add_argument(
             "--from-text",
-            help="Create query vector from text using an embedding plugin")
-        parser.add_argument("--limit", type=int, default=10,
-                            help="Maximum number of results")
+            help="Create query vector from text using an embedding plugin",
+        )
         parser.add_argument(
-            "--threshold", type=float, default=0.0,
-            help="Minimum similarity threshold")
+            "--limit", type=int, default=10, help="Maximum number of results"
+        )
+        parser.add_argument(
+            "--threshold", type=float, default=0.0, help="Minimum similarity threshold"
+        )
         parser.add_argument("--filter", help="Metadata filter (JSON object)")
 
         try:
@@ -462,7 +466,7 @@ class WDBXCLI:
         elif parsed_args.from_file:
             # Load vector from file
             try:
-                with open(parsed_args.from_file, 'r') as f:
+                with open(parsed_args.from_file, "r") as f:
                     query_vector = json.load(f)
             except Exception as e:
                 print(f"Error loading query vector from file: {e}")
@@ -471,15 +475,20 @@ class WDBXCLI:
         elif parsed_args.from_text:
             # Create vector from text using an embedding plugin
             for plugin_name in [
-                    "openai", "ollama", "huggingface", "sentencetransformers"]:
+                "openai",
+                "ollama",
+                "huggingface",
+                "sentencetransformers",
+            ]:
                 if plugin_name in self.wdbx.plugins:
                     plugin = self.wdbx.plugins[plugin_name]
                     try:
-                        query_vector = await plugin.create_embedding(parsed_args.from_text)
+                        query_vector = await plugin.create_embedding(
+                            parsed_args.from_text
+                        )
                         break
                     except Exception as e:
-                        print(
-                            f"Error creating embedding with {plugin_name}: {e}")
+                        print(f"Error creating embedding with {plugin_name}: {e}")
 
             if query_vector is None:
                 print("No embedding plugin available")
@@ -503,10 +512,7 @@ class WDBXCLI:
         # Search vectors
         try:
             results = await self.wdbx.vector_search_async(
-                query_vector,
-                parsed_args.limit,
-                parsed_args.threshold,
-                filter_metadata
+                query_vector, parsed_args.limit, parsed_args.threshold, filter_metadata
             )
 
             print(f"Found {len(results)} results:")
@@ -516,8 +522,7 @@ class WDBXCLI:
                     # Print selected metadata fields for brevity
                     brief_metadata = {}
                     for key, value in metadata.items():
-                        if key in ["source", "content", "url", "title",
-                                   "description"]:
+                        if key in ["source", "content", "url", "title", "description"]:
                             # Truncate long values
                             if isinstance(value, str) and len(value) > 50:
                                 brief_metadata[key] = value[:50] + "..."
@@ -607,7 +612,7 @@ class WDBXCLI:
         elif parsed_args.from_file:
             # Load metadata from file
             try:
-                with open(parsed_args.from_file, 'r') as f:
+                with open(parsed_args.from_file, "r") as f:
                     metadata = json.load(f)
             except Exception as e:
                 print(f"Error loading metadata from file: {e}")
@@ -638,14 +643,14 @@ class WDBXCLI:
                 if key == "plugins_loaded":
                     print(f"  Plugins loaded: {value}")
                     if value > 0 and "plugins" in stats:
-                        plugins = [plugin["name"]
-                                   for plugin in stats["plugins"]]
+                        plugins = [plugin["name"] for plugin in stats["plugins"]]
                         print(f"    {', '.join(plugins)}")
                 elif key == "indices":
                     print(f"  Indices: {len(value)}")
                     for i, index in enumerate(value):
                         print(
-                            f"    Shard {i}: {index['type']}, {index['size']} vectors")
+                            f"    Shard {i}: {index['type']}, {index['size']} vectors"
+                        )
                 elif key != "plugins":  # Skip plugins, handled above
                     print(f"  {key}: {value}")
         except Exception as e:
@@ -657,8 +662,9 @@ class WDBXCLI:
 
         # Parse arguments
         parser = argparse.ArgumentParser(description="Clear the database")
-        parser.add_argument("--force", action="store_true",
-                            help="Skip confirmation prompt")
+        parser.add_argument(
+            "--force", action="store_true", help="Skip confirmation prompt"
+        )
 
         try:
             parsed_args = parser.parse_args(args.split())
@@ -667,8 +673,7 @@ class WDBXCLI:
 
         # Confirm unless forced
         if not parsed_args.force:
-            confirm = input(
-                "Are you sure you want to clear the database? (y/N) ")
+            confirm = input("Are you sure you want to clear the database? (y/N) ")
             if confirm.lower() != "y":
                 print("Operation cancelled.")
                 return
@@ -739,16 +744,14 @@ class WDBXCLI:
 
         # Parse arguments
         parser = argparse.ArgumentParser(description="Start the API server")
-        parser.add_argument("--host", default="0.0.0.0",
-                            help="Host to bind to")
-        parser.add_argument("--port", type=int, default=8000,
-                            help="Port to listen on")
-        parser.add_argument("--auth", action="store_true",
-                            help="Enable authentication")
+        parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
+        parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
+        parser.add_argument("--auth", action="store_true", help="Enable authentication")
         parser.add_argument("--auth-key", help="Authentication key")
         parser.add_argument("--cors", action="store_true", help="Enable CORS")
         parser.add_argument(
-            "--cors-origins", help="Allowed CORS origins (comma-separated)")
+            "--cors-origins", help="Allowed CORS origins (comma-separated)"
+        )
 
         try:
             parsed_args = parser.parse_args(args.split())
@@ -780,8 +783,7 @@ class WDBXCLI:
                 cors_origins=cors_origins,
             )
 
-            print(
-                f"Starting API server on {parsed_args.host}:{parsed_args.port}")
+            print(f"Starting API server on {parsed_args.host}:{parsed_args.port}")
             print("Press Ctrl+C to stop the server")
 
             await server.initialize()

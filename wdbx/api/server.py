@@ -70,7 +70,14 @@ class WDBXAPIServer:
     async def initialize(self):
         """Initialize the API server."""
         try:
-            from fastapi import FastAPI, Depends, HTTPException, status, Security, APIRouter
+            from fastapi import (
+                FastAPI,
+                Depends,
+                HTTPException,
+                status,
+                Security,
+                APIRouter,
+            )
             from fastapi.security.api_key import APIKeyHeader
             from fastapi.middleware.cors import CORSMiddleware
             from pydantic import BaseModel, Field
@@ -108,8 +115,7 @@ class WDBXAPIServer:
                     return api_key
 
                 # Apply authentication to all routes
-                self.api_router = APIRouter(
-                    dependencies=[Depends(get_api_key)])
+                self.api_router = APIRouter(dependencies=[Depends(get_api_key)])
 
             # Define data models
             class VectorModel(BaseModel):
@@ -137,33 +143,69 @@ class WDBXAPIServer:
             # Health check
             @self.api_router.get("/health")
             async def health_check():
+                """
+                Check the health of the API server.
+
+                Returns:
+                    JSON response with status and version.
+                """
                 return {"status": "healthy", "version": self.wdbx.version}
 
             # Vector operations
             @self.api_router.post("/vectors")
             async def store_vector(vector_data: VectorModel):
+                """
+                Store a vector in the database.
+
+                Args:
+                    vector_data: Vector data including vector, metadata, and optional ID.
+
+                Returns:
+                    JSON response with the stored vector ID.
+                """
                 vector_id = await self.wdbx.vector_store_async(
-                    vector_data.vector,
-                    vector_data.metadata,
-                    vector_data.id
+                    vector_data.vector, vector_data.metadata, vector_data.id
                 )
                 return {"vector_id": vector_id}
 
             @self.api_router.post("/vectors/search")
             async def search_vectors(search_data: SearchModel):
+                """
+                Search for similar vectors.
+
+                Args:
+                    search_data: Search data including query vector, limit, threshold, and optional metadata filter.
+
+                Returns:
+                    JSON response with search results.
+                """
                 results = await self.wdbx.vector_search_async(
                     search_data.query_vector,
                     search_data.limit,
                     search_data.threshold,
-                    search_data.filter_metadata
+                    search_data.filter_metadata,
                 )
-                return {"results": [
-                    {"vector_id": vid, "similarity": sim, "metadata": meta}
-                    for vid, sim, meta in results
-                ]}
+                return {
+                    "results": [
+                        {"vector_id": vid, "similarity": sim, "metadata": meta}
+                        for vid, sim, meta in results
+                    ]
+                }
 
             @self.api_router.get("/vectors/{vector_id}")
             async def get_vector(vector_id: str):
+                """
+                Get a vector by ID.
+
+                Args:
+                    vector_id: ID of the vector to retrieve.
+
+                Returns:
+                    JSON response with vector data and metadata.
+
+                Raises:
+                    HTTPException: If the vector is not found.
+                """
                 result = await self.wdbx.get_vector_async(vector_id)
                 if result is None:
                     raise HTTPException(
@@ -175,6 +217,18 @@ class WDBXAPIServer:
 
             @self.api_router.delete("/vectors/{vector_id}")
             async def delete_vector(vector_id: str):
+                """
+                Delete a vector by ID.
+
+                Args:
+                    vector_id: ID of the vector to delete.
+
+                Returns:
+                    JSON response indicating success.
+
+                Raises:
+                    HTTPException: If the vector is not found.
+                """
                 success = await self.wdbx.delete_vector_async(vector_id)
                 if not success:
                     raise HTTPException(
@@ -184,9 +238,23 @@ class WDBXAPIServer:
                 return {"success": True}
 
             @self.api_router.put("/vectors/{vector_id}/metadata")
-            async def update_metadata(
-                    vector_id: str, metadata_data: MetadataModel):
-                success = await self.wdbx.update_metadata_async(vector_id, metadata_data.metadata)
+            async def update_metadata(vector_id: str, metadata_data: MetadataModel):
+                """
+                Update metadata for a vector.
+
+                Args:
+                    vector_id: ID of the vector to update.
+                    metadata_data: New metadata to associate with the vector.
+
+                Returns:
+                    JSON response indicating success.
+
+                Raises:
+                    HTTPException: If the vector is not found.
+                """
+                success = await self.wdbx.update_metadata_async(
+                    vector_id, metadata_data.metadata
+                )
                 if not success:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
@@ -197,19 +265,47 @@ class WDBXAPIServer:
             # Database operations
             @self.api_router.get("/stats")
             async def get_stats():
+                """
+                Get database statistics.
+
+                Returns:
+                    JSON response with database statistics.
+                """
                 return self.wdbx.get_stats()
 
             @self.api_router.post("/clear")
             async def clear_database():
+                """
+                Clear the database.
+
+                Returns:
+                    JSON response with the number of removed vectors.
+                """
                 count = await self.wdbx.clear_async()
                 return {"removed_vectors": count}
 
             # Embedding operations
             @self.api_router.post("/embeddings")
             async def create_embedding(data: EmbeddingModel):
+                """
+                Create an embedding for a text.
+
+                Args:
+                    data: Embedding data including the input text.
+
+                Returns:
+                    JSON response with the generated embedding.
+
+                Raises:
+                    HTTPException: If no embedding plugin is available.
+                """
                 # Try to find a plugin that can generate embeddings
                 for plugin_name in [
-                        "openai", "ollama", "huggingface", "sentencetransformers"]:
+                    "openai",
+                    "ollama",
+                    "huggingface",
+                    "sentencetransformers",
+                ]:
                     if plugin_name in self.wdbx.plugins:
                         plugin = self.wdbx.plugins[plugin_name]
                         try:
@@ -217,7 +313,8 @@ class WDBXAPIServer:
                             return {"embedding": embedding}
                         except Exception as e:
                             logger.error(
-                                f"Error creating embedding with {plugin_name}: {e}")
+                                f"Error creating embedding with {plugin_name}: {e}"
+                            )
 
                 # If no plugin is available, return an error
                 raise HTTPException(
@@ -227,14 +324,32 @@ class WDBXAPIServer:
 
             @self.api_router.post("/embeddings/batch")
             async def create_embeddings_batch(data: TextsModel):
+                """
+                Create embeddings for a batch of texts.
+
+                Args:
+                    data: Texts data including a list of input texts.
+
+                Returns:
+                    JSON response with the generated embeddings.
+
+                Raises:
+                    HTTPException: If no embedding plugin is available.
+                """
                 # Try to find a plugin that can generate embeddings
                 for plugin_name in [
-                        "openai", "ollama", "huggingface", "sentencetransformers"]:
+                    "openai",
+                    "ollama",
+                    "huggingface",
+                    "sentencetransformers",
+                ]:
                     if plugin_name in self.wdbx.plugins:
                         plugin = self.wdbx.plugins[plugin_name]
                         try:
                             if hasattr(plugin, "create_embeddings_batch"):
-                                embeddings = await plugin.create_embeddings_batch(data.texts)
+                                embeddings = await plugin.create_embeddings_batch(
+                                    data.texts
+                                )
                             else:
                                 # Fall back to individual embeddings
                                 embeddings = []
@@ -245,7 +360,8 @@ class WDBXAPIServer:
                             return {"embeddings": embeddings}
                         except Exception as e:
                             logger.error(
-                                f"Error creating embeddings batch with {plugin_name}: {e}")
+                                f"Error creating embeddings batch with {plugin_name}: {e}"
+                            )
 
                 # If no plugin is available, return an error
                 raise HTTPException(
@@ -256,6 +372,12 @@ class WDBXAPIServer:
             # Plugin operations
             @self.api_router.get("/plugins")
             async def list_plugins():
+                """
+                List available plugins.
+
+                Returns:
+                    JSON response with a list of available plugins.
+                """
                 return {
                     "plugins": [
                         {
@@ -269,6 +391,18 @@ class WDBXAPIServer:
 
             @self.api_router.get("/plugins/{plugin_name}")
             async def get_plugin_info(plugin_name: str):
+                """
+                Get information about a plugin.
+
+                Args:
+                    plugin_name: Name of the plugin to retrieve information for.
+
+                Returns:
+                    JSON response with plugin information and statistics.
+
+                Raises:
+                    HTTPException: If the plugin is not found.
+                """
                 if plugin_name not in self.wdbx.plugins:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
@@ -290,7 +424,8 @@ class WDBXAPIServer:
         except ImportError as e:
             logger.error(f"Required package not installed: {e}")
             logger.error(
-                "FastAPI is required for the API server. Install with: pip install fastapi uvicorn")
+                "FastAPI is required for the API server. Install with: pip install fastapi uvicorn"
+            )
             raise RuntimeError(f"Required package not installed: {e}")
         except Exception as e:
             logger.error(f"Error initializing API server: {e}")
@@ -321,7 +456,8 @@ class WDBXAPIServer:
         except ImportError as e:
             logger.error(f"Required package not installed: {e}")
             logger.error(
-                "Uvicorn is required for the API server. Install with: pip install uvicorn")
+                "Uvicorn is required for the API server. Install with: pip install uvicorn"
+            )
             raise RuntimeError(f"Required package not installed: {e}")
         except Exception as e:
             logger.error(f"Error starting API server: {e}")
