@@ -57,7 +57,7 @@ import asyncio
 asyncio.run(wdbx.initialize())
 
 # Store a vector
-vector = [0.1, 0.2, ...] * 384  # Your vector data
+vector = [0.1 for _ in range(384)]  # Create a 384-dimensional vector with each element set to 0.1
 metadata = {"source": "example", "content": "Sample text"}
 vector_id = wdbx.vector_store(vector, metadata)
 
@@ -83,10 +83,10 @@ async def main():
     await wdbx.initialize()
 
     # Store vectors asynchronously
-    vector_id = await wdbx.vector_store_async([0.1] * 384, {"text": "Example"})
+    vector_id = await wdbx.vector_store_async([0.1 for _ in range(384)], {"text": "Example"})
 
     # Search asynchronously
-    results = await wdbx.vector_search_async([0.1] * 384, limit=5)
+    results = await wdbx.vector_search_async([0.1 for _ in range(384)], limit=5)
 
     # Clean up
     await wdbx.shutdown()
