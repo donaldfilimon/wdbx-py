@@ -386,6 +386,7 @@ class HNSWIndex(VectorIndex):
             if self.next_index % 1000 == 0:
                 self._save_index()
 
+            logger.info(f"Added vector {vector_id} to HNSW index")
             return True
         except Exception as e:
             logger.error(f"Error adding vector to HNSW index: {e}")
@@ -447,6 +448,7 @@ class HNSWIndex(VectorIndex):
             if self.next_index % 1000 == 0:
                 self._save_index()
 
+            logger.info(f"Batch added {len(vectors)} vectors to HNSW index")
             return True
         except Exception as e:
             logger.error(f"Error batch adding vectors to HNSW index: {e}")
@@ -496,6 +498,7 @@ class HNSWIndex(VectorIndex):
                 for idx, sim in zip(indices[0], similarities)
             ]
 
+            logger.info(f"Search completed with {len(results)} results")
             return results
         except Exception as e:
             logger.error(f"Error searching HNSW index: {e}")
@@ -547,6 +550,7 @@ class HNSWIndex(VectorIndex):
         try:
             zero_vector = np.zeros(self.vector_dim, dtype=np.float32)
             self.index.replace_vector(zero_vector, index)
+            logger.info(f"Removed vector {vector_id} from HNSW index")
             return True
         except Exception as e:
             logger.error(f"Error removing vector from HNSW index: {e}")
@@ -587,6 +591,7 @@ class HNSWIndex(VectorIndex):
             # Save empty index
             self._save_index()
 
+            logger.info("Cleared HNSW index")
             return True
         except Exception as e:
             logger.error(f"Error clearing HNSW index: {e}")
@@ -893,6 +898,7 @@ class FaissIndex(VectorIndex):
             if self.next_index % 1000 == 0:
                 self._save_index()
 
+            logger.info(f"Added vector {vector_id} to FAISS index")
             return True
         except Exception as e:
             logger.error(f"Error adding vector to FAISS index: {e}")
@@ -955,6 +961,7 @@ class FaissIndex(VectorIndex):
             if self.next_index % 1000 == 0:
                 self._save_index()
 
+            logger.info(f"Batch added {len(vectors)} vectors to FAISS index")
             return True
         except Exception as e:
             logger.error(f"Error batch adding vectors to FAISS index: {e}")
@@ -1016,6 +1023,7 @@ class FaissIndex(VectorIndex):
                 if idx != -1  # FAISS returns -1 for padding when fewer than k results
             ]
 
+            logger.info(f"Search completed with {len(results)} results")
             return results
         except Exception as e:
             logger.error(f"Error searching FAISS index: {e}")
@@ -1062,6 +1070,7 @@ class FaissIndex(VectorIndex):
         del self.index_to_id[index]
 
         # We can't actually remove from FAISS efficiently, just update the mappings
+        logger.info(f"Removed vector {vector_id} from FAISS index")
         return True
 
     async def remove_async(self, vector_id: str) -> bool:
@@ -1096,6 +1105,7 @@ class FaissIndex(VectorIndex):
             # Save empty index
             self._save_index()
 
+            logger.info("Cleared FAISS index")
             return True
         except Exception as e:
             logger.error(f"Error clearing FAISS index: {e}")

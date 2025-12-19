@@ -550,109 +550,108 @@ class ShardManager:
             logger.warning("Not a coordinator, cannot allocate shards")
             return
 
-        # Get active nodes
-        active_nodes = [
-            node_id
-            for node_id, node in self.nodes.items()
-            if node.get("status") == "active"
-        ]
+        try:
+            # Get active nodes
+            active_nodes = [
+                node_id for node_id, node in self.nodes.items()
+                if node.get("status") == "active"]
 
-        # If no active nodes, allocate to self
-        if not active_nodes:
-            active_nodes = [self.node_id]
-            self.nodes[self.node_id] = {
-                "status": "active",
-                "host": self.host,
-                "port": self.port,
-                "capabilities": {
-                    "storage": True,
-                    "compute": True,
-                },
-            }
+            # If no active nodes, allocate to self
+            if not active_nodes:
+                active_nodes = [self.node_id]
+                self.nodes[self.node_id] = {
+                    "status": "active",
+                    "host": self.host,
+                    "port": self.port,
+                    "capabilities": {
+                        "storage": True,
+                        "compute": True,
+                    }
+                }
 
-        # Allocate primary shards
-        for shard_id in range(self.num_shards):
-            # If shard is already allocated, skip
-            if shard_id in self.shard_allocation:
-                continue
-
-            # Allocate to node with fewest shards
-            node_shard_counts = {}
-            for node_id in active_nodes:
-                node_shard_counts[node_id] = 0
-
-            for allocated_shard, node_id in self.shard_allocation.items():
-                if node_id in node_shard_counts:
-                    node_shard_counts[node_id] += 1
-
-            # Find node with fewest shards
-            min_shards = float("inf")
-            min_node = None
-            for node_id, count in node_shard_counts.items():
-                if count < min_shards:
-                    min_shards = count
-                    min_node = node_id
-
-            # Allocate shard to node
-            if min_node:
-                self.shard_allocation[shard_id] = min_node
-                logger.debug(f"Allocated shard {shard_id} to node {min_node}")
-
-        # Allocate replica shards
-        for shard_id in range(self.num_shards):
-            # Initialize replica list if not exists
-            if shard_id not in self.shard_replicas:
-                self.shard_replicas[shard_id] = []
-
-            # Primary node
-            primary_node = self.shard_allocation.get(shard_id)
-            if not primary_node:
-                continue
-
-            # Allocate replicas
-            for replica_idx in range(self.replication_factor):
-                # If replica already allocated, skip
-                if len(self.shard_replicas[shard_id]) > replica_idx:
+            # Allocate primary shards
+            for shard_id in range(self.num_shards):
+                # If shard is already allocated, skip
+                if shard_id in self.shard_allocation:
                     continue
 
-                # Find eligible nodes (not primary and not already a replica)
-                eligible_nodes = [
-                    node_id
-                    for node_id in active_nodes
-                    if node_id != primary_node
-                    and node_id not in self.shard_replicas[shard_id]
-                ]
+                # Allocate to node with fewest shards
+                node_shard_counts = {}
+                for node_id in active_nodes:
+                    node_shard_counts[node_id] = 0
 
-                if not eligible_nodes:
-                    break
+                for allocated_shard, node_id in self.shard_allocation.items():
+                    if node_id in node_shard_counts:
+                        node_shard_counts[node_id] += 1
 
-                # Allocate to node with fewest replicas
-                node_replica_counts = {}
-                for node_id in eligible_nodes:
-                    node_replica_counts[node_id] = 0
-
-                for shard_replicas in self.shard_replicas.values():
-                    for node_id in shard_replicas:
-                        if node_id in node_replica_counts:
-                            node_replica_counts[node_id] += 1
-
-                # Find node with fewest replicas
-                min_replicas = float("inf")
+                # Find node with fewest shards
+                min_shards = float('inf')
                 min_node = None
-                for node_id, count in node_replica_counts.items():
-                    if count < min_replicas:
-                        min_replicas = count
+                for node_id, count in node_shard_counts.items():
+                    if count < min_shards:
+                        min_shards = count
                         min_node = node_id
 
-                # Allocate replica to node
+                # Allocate shard to node
                 if min_node:
-                    self.shard_replicas[shard_id].append(min_node)
-                    logger.debug(
-                        f"Allocated replica for shard {shard_id} to node {min_node}"
-                    )
+                    self.shard_allocation[shard_id] = min_node
+                    logger.debug(f"Allocated shard {shard_id} to node {min_node}")
 
-        # Save allocation
-        await self._save_shard_allocation()
+            # Allocate replica shards
+            for shard_id in range(self.num_shards):
+                # Initialize replica list if not exists
+                if shard_id not in self.shard_replicas:
+                    self.shard_replicas[shard_id] = []
+
+                # Primary node
+                primary_node = self.shard_allocation.get(shard_id)
+                if not primary_node:
+                    continue
+
+                # Allocate replicas
+                for replica_idx in range(self.replication_factor):
+                    # If replica already allocated, skip
+                    if len(self.shard_replicas[shard_id]) > replica_idx:
+                        continue
+
+                    # Find eligible nodes (not primary and not already a replica)
+                    eligible_nodes = [
+                        node_id for node_id in active_nodes
+                        if node_id != primary_node and node_id
+                        not in self.shard_replicas[shard_id]]
+
+                    if not eligible_nodes:
+                        break
+
+                    # Allocate to node with fewest replicas
+                    node_replica_counts = {}
+                    for node_id in eligible_nodes:
+                        node_replica_counts[node_id] = 0
+
+                    for shard_replicas in self.shard_replicas.values():
+                        for node_id in shard_replicas:
+                            if node_id in node_replica_counts:
+                                node_replica_counts[node_id] += 1
+
+                    # Find node with fewest replicas
+                    min_replicas = float('inf')
+                    min_node = None
+                    for node_id, count in node_replica_counts.items():
+                        if count < min_replicas:
+                            min_replicas = count
+                            min_node = node_id
+
+                    # Allocate replica to node
+                    if min_node:
+                        self.shard_replicas[shard_id].append(min_node)
+                        logger.debug(
+                            f"Allocated replica for shard {shard_id} to node {min_node}")
+
+            # Save allocation
+            await self._save_shard_allocation()
+        except Exception as e:
+            logger.error(f"Error allocating shards: {e}")
+            raise
 
     def get_shard_info(self, shard_id: int) -> Dict[str, Any]:
         """
