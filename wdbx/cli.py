@@ -249,11 +249,14 @@ class WDBXCLI:
                 args = parts[1] if len(parts) > 1 else ""
 
                 # Run command
-                await self.run_command(command, args)
+                result = await self.run_command(command, args)
+                if result:
+                    print(result)
 
             except KeyboardInterrupt:
                 print("\nOperation cancelled.")
             except Exception as e:
+                logger.error(f"Error in interactive mode: {e}")
                 print(f"Error: {e}")
 
     async def run(self, args: List[str]):
@@ -319,7 +322,11 @@ class WDBXCLI:
                 print(f"Error: {e}")
         else:
             # Interactive mode
-            await self.run_interactive()
+            try:
+                await self.run_interactive()
+            except Exception as e:
+                logger.error(f"Error in interactive mode: {e}")
+                print(f"Error: {e}")
 
     # Command handlers
 
