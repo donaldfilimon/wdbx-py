@@ -64,8 +64,7 @@ class LMStudioPlugin(WDBXPlugin):
         self.is_connected = False
         self.available_models = []
 
-        logger.info(
-            f"Initialized LMStudioPlugin with base_url={self.base_url}")
+        logger.info(f"Initialized LMStudioPlugin with base_url={self.base_url}")
 
     @property
     def name(self) -> str:
@@ -88,7 +87,7 @@ class LMStudioPlugin(WDBXPlugin):
             # Create session
             self.session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=self.timeout),
-                headers=self._get_headers()
+                headers=self._get_headers(),
             )
 
             # Check connection
@@ -144,7 +143,8 @@ class LMStudioPlugin(WDBXPlugin):
                 if response.status != 200:
                     error_text = await response.text()
                     raise PluginError(
-                        f"Failed to connect to LMStudio: {response.status} {error_text}")
+                        f"Failed to connect to LMStudio: {response.status} {error_text}"
+                    )
                 return True
         except asyncio.TimeoutError:
             raise PluginError(f"Connection to LMStudio timed out")
@@ -166,7 +166,8 @@ class LMStudioPlugin(WDBXPlugin):
                 if response.status != 200:
                     error_text = await response.text()
                     raise PluginError(
-                        f"Failed to get available models: {response.status} {error_text}")
+                        f"Failed to get available models: {response.status} {error_text}"
+                    )
 
                 data = await response.json()
                 models = [model["id"] for model in data["data"]]
@@ -212,17 +213,17 @@ class LMStudioPlugin(WDBXPlugin):
                 raise PluginError("No embedding model available")
 
             # Prepare request
-            data = {
-                "input": text,
-                "model": self.embedding_model
-            }
+            data = {"input": text, "model": self.embedding_model}
 
             # Send request
-            async with self.session.post(f"{self.base_url}/embeddings", json=data) as response:
+            async with self.session.post(
+                f"{self.base_url}/embeddings", json=data
+            ) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     raise PluginError(
-                        f"Failed to create embedding: {response.status} {error_text}")
+                        f"Failed to create embedding: {response.status} {error_text}"
+                    )
 
                 result = await response.json()
                 embedding = result["data"][0]["embedding"]
@@ -260,17 +261,17 @@ class LMStudioPlugin(WDBXPlugin):
                 raise PluginError("No embedding model available")
 
             # Prepare request
-            data = {
-                "input": texts,
-                "model": self.embedding_model
-            }
+            data = {"input": texts, "model": self.embedding_model}
 
             # Send request
-            async with self.session.post(f"{self.base_url}/embeddings", json=data) as response:
+            async with self.session.post(
+                f"{self.base_url}/embeddings", json=data
+            ) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     raise PluginError(
-                        f"Failed to create embeddings: {response.status} {error_text}")
+                        f"Failed to create embeddings: {response.status} {error_text}"
+                    )
 
                 result = await response.json()
                 embeddings = [item["embedding"] for item in result["data"]]
@@ -287,7 +288,7 @@ class LMStudioPlugin(WDBXPlugin):
         temperature: float = 0.7,
         max_tokens: int = 256,
         stream: bool = False,
-        stop: Optional[List[str]] = None
+        stop: Optional[List[str]] = None,
     ) -> Union[str, AsyncGenerator[str, None]]:
         """
         Generate text completion using LMStudio.
@@ -329,7 +330,7 @@ class LMStudioPlugin(WDBXPlugin):
                 "prompt": prompt,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
-                "stream": stream
+                "stream": stream,
             }
 
             if stop:
@@ -358,18 +359,23 @@ class LMStudioPlugin(WDBXPlugin):
             PluginError: If text generation fails
         """
         try:
-            async with self.session.post(f"{self.base_url}/completions", json=data) as response:
+            async with self.session.post(
+                f"{self.base_url}/completions", json=data
+            ) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     raise PluginError(
-                        f"Failed to generate completion: {response.status} {error_text}")
+                        f"Failed to generate completion: {response.status} {error_text}"
+                    )
 
                 result = await response.json()
                 return result["choices"][0]["text"]
         except Exception as e:
             raise PluginError(f"Failed to generate completion: {e}")
 
-    async def _stream_completion(self, data: Dict[str, Any]) -> AsyncGenerator[str, None]:
+    async def _stream_completion(
+        self, data: Dict[str, Any]
+    ) -> AsyncGenerator[str, None]:
         """
         Stream text completion.
 
@@ -383,11 +389,14 @@ class LMStudioPlugin(WDBXPlugin):
             PluginError: If text generation fails
         """
         try:
-            async with self.session.post(f"{self.base_url}/completions", json=data) as response:
+            async with self.session.post(
+                f"{self.base_url}/completions", json=data
+            ) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     raise PluginError(
-                        f"Failed to generate completion: {response.status} {error_text}")
+                        f"Failed to generate completion: {response.status} {error_text}"
+                    )
 
                 # Stream response
                 async for line in response.content:
@@ -407,7 +416,11 @@ class LMStudioPlugin(WDBXPlugin):
                         data = json.loads(line)
 
                         # Extract text
-                        if "choices" in data and data["choices"] and "text" in data["choices"][0]:
+                        if (
+                            "choices" in data
+                            and data["choices"]
+                            and "text" in data["choices"][0]
+                        ):
                             yield data["choices"][0]["text"]
                     except json.JSONDecodeError:
                         pass
@@ -421,7 +434,7 @@ class LMStudioPlugin(WDBXPlugin):
         temperature: float = 0.7,
         max_tokens: int = 256,
         stream: bool = False,
-        stop: Optional[List[str]] = None
+        stop: Optional[List[str]] = None,
     ) -> Union[str, AsyncGenerator[str, None]]:
         """
         Chat completion using LMStudio.
@@ -463,7 +476,7 @@ class LMStudioPlugin(WDBXPlugin):
                 "messages": messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
-                "stream": stream
+                "stream": stream,
             }
 
             if stop:
@@ -492,11 +505,14 @@ class LMStudioPlugin(WDBXPlugin):
             PluginError: If chat completion fails
         """
         try:
-            async with self.session.post(f"{self.base_url}/chat/completions", json=data) as response:
+            async with self.session.post(
+                f"{self.base_url}/chat/completions", json=data
+            ) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     raise PluginError(
-                        f"Failed to generate chat completion: {response.status} {error_text}")
+                        f"Failed to generate chat completion: {response.status} {error_text}"
+                    )
 
                 result = await response.json()
                 return result["choices"][0]["message"]["content"]
@@ -517,11 +533,14 @@ class LMStudioPlugin(WDBXPlugin):
             PluginError: If chat completion fails
         """
         try:
-            async with self.session.post(f"{self.base_url}/chat/completions", json=data) as response:
+            async with self.session.post(
+                f"{self.base_url}/chat/completions", json=data
+            ) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     raise PluginError(
-                        f"Failed to generate chat completion: {response.status} {error_text}")
+                        f"Failed to generate chat completion: {response.status} {error_text}"
+                    )
 
                 # Stream response
                 async for line in response.content:
@@ -541,7 +560,11 @@ class LMStudioPlugin(WDBXPlugin):
                         data = json.loads(line)
 
                         # Extract content
-                        if "choices" in data and data["choices"] and "delta" in data["choices"][0]:
+                        if (
+                            "choices" in data
+                            and data["choices"]
+                            and "delta" in data["choices"][0]
+                        ):
                             delta = data["choices"][0]["delta"]
                             if "content" in delta:
                                 yield delta["content"]
@@ -563,7 +586,7 @@ class LMStudioPlugin(WDBXPlugin):
                     "--system": "System prompt",
                     "--temperature": "Sampling temperature (0-1)",
                     "--max-tokens": "Maximum number of tokens to generate",
-                }
+                },
             )
 
             self.wdbx.register_command(
@@ -575,14 +598,14 @@ class LMStudioPlugin(WDBXPlugin):
                     "--model": "Model to use",
                     "--temperature": "Sampling temperature (0-1)",
                     "--max-tokens": "Maximum number of tokens to generate",
-                }
+                },
             )
 
             self.wdbx.register_command(
                 "lmstudio-models",
                 self._cmd_models,
                 "List available LMStudio models",
-                {}
+                {},
             )
 
     async def _cmd_chat(self, args: str):
@@ -590,17 +613,19 @@ class LMStudioPlugin(WDBXPlugin):
         import argparse
 
         # Parse arguments
-        parser = argparse.ArgumentParser(
-            description="Chat with LMStudio model")
+        parser = argparse.ArgumentParser(description="Chat with LMStudio model")
         parser.add_argument("--message", required=True, help="User message")
         parser.add_argument("--model", help="Model to use")
         parser.add_argument("--system", help="System prompt")
         parser.add_argument(
-            "--temperature", type=float, default=0.7,
-            help="Sampling temperature (0-1)")
+            "--temperature", type=float, default=0.7, help="Sampling temperature (0-1)"
+        )
         parser.add_argument(
-            "--max-tokens", type=int, default=256,
-            help="Maximum number of tokens to generate")
+            "--max-tokens",
+            type=int,
+            default=256,
+            help="Maximum number of tokens to generate",
+        )
 
         try:
             parsed_args = parser.parse_args(args.split())
@@ -612,8 +637,7 @@ class LMStudioPlugin(WDBXPlugin):
             messages = []
 
             if parsed_args.system:
-                messages.append(
-                    {"role": "system", "content": parsed_args.system})
+                messages.append({"role": "system", "content": parsed_args.system})
 
             messages.append({"role": "user", "content": parsed_args.message})
 
@@ -623,7 +647,7 @@ class LMStudioPlugin(WDBXPlugin):
                 messages=messages,
                 model=parsed_args.model,
                 temperature=parsed_args.temperature,
-                max_tokens=parsed_args.max_tokens
+                max_tokens=parsed_args.max_tokens,
             )
 
             # Print response
@@ -638,16 +662,19 @@ class LMStudioPlugin(WDBXPlugin):
 
         # Parse arguments
         parser = argparse.ArgumentParser(
-            description="Generate text completion with LMStudio model")
-        parser.add_argument("--prompt", required=True,
-                            help="Completion prompt")
+            description="Generate text completion with LMStudio model"
+        )
+        parser.add_argument("--prompt", required=True, help="Completion prompt")
         parser.add_argument("--model", help="Model to use")
         parser.add_argument(
-            "--temperature", type=float, default=0.7,
-            help="Sampling temperature (0-1)")
+            "--temperature", type=float, default=0.7, help="Sampling temperature (0-1)"
+        )
         parser.add_argument(
-            "--max-tokens", type=int, default=256,
-            help="Maximum number of tokens to generate")
+            "--max-tokens",
+            type=int,
+            default=256,
+            help="Maximum number of tokens to generate",
+        )
 
         try:
             parsed_args = parser.parse_args(args.split())
@@ -661,7 +688,7 @@ class LMStudioPlugin(WDBXPlugin):
                 prompt=parsed_args.prompt,
                 model=parsed_args.model,
                 temperature=parsed_args.temperature,
-                max_tokens=parsed_args.max_tokens
+                max_tokens=parsed_args.max_tokens,
             )
 
             # Print completion

@@ -1,86 +1,86 @@
 # WDBX Configuration
 
 # Core settings
-vector_dimension: 384
-num_shards: 2
-data_dir: "./wdbx_data"
-enable_plugins: true
-enable_distributed: false
-enable_gpu: false
-log_level: "INFO"
+vector_dimension: 384  # Dimension of vectors stored in the database
+num_shards: 2  # Number of shards for distributed storage
+data_dir: "./wdbx_data"  # Directory for storing vector data
+enable_plugins: true  # Enable the plugin system
+enable_distributed: false  # Enable distributed architecture
+enable_gpu: false  # Enable GPU acceleration (if available)
+log_level: "INFO"  # Logging level ("DEBUG", "INFO", "WARNING", "ERROR")
 
 # Vector storage settings
 vector_store:
-  save_immediately: false
-  threads: 4
-  cache_size_mb: 128
+  save_immediately: false  # Save vectors immediately after storing
+  threads: 4  # Number of threads for vector storage operations
+  cache_size_mb: 128  # Cache size in megabytes for vector storage
 
 # Index settings
 indexing:
-  type: "hnsw" # "hnsw" or "faiss"
+  type: "hnsw"  # Index type ("hnsw" or "faiss")
   hnsw:
-    m: 16
-    ef_construction: 200
-    ef_search: 50
+    m: 16  # Number of bi-directional links created for every new element
+    ef_construction: 200  # Size of the dynamic list for the nearest neighbors (used during the construction)
+    ef_search: 50  # Size of the dynamic list for the nearest neighbors (used during the search)
   faiss:
-    index_type: "Flat"
-    nprobe: 8
+    index_type: "Flat"  # Type of the Faiss index
+    nprobe: 8  # Number of cells (clusters) to search in
 
 # API server settings
 api:
-  host: "0.0.0.0"
-  port: 8000
-  enable_auth: false
-  auth_key: ""
-  enable_cors: true
-  cors_origins: ["*"]
+  host: "0.0.0.0"  # Host to bind the API server to
+  port: 8000  # Port to listen on
+  enable_auth: false  # Enable authentication for the API server
+  auth_key: ""  # Authentication key for the API server
+  enable_cors: true  # Enable CORS (Cross-Origin Resource Sharing)
+  cors_origins: ["*"]  # List of allowed CORS origins
 
 # Plugin settings
 plugins:
   # WebScraper plugin
   webscraper:
-    user_agent: "WDBX WebScraper/0.2.0"
-    respect_robots_txt: true
-    timeout: 10.0
-    max_depth: 1
-    concurrency: 5
-    rate_limit: 1.0
-    embedding_model: "all-MiniLM-L6-v2"
+    user_agent: "WDBX WebScraper/0.2.0"  # User agent string for HTTP requests
+    respect_robots_txt: true  # Respect robots.txt directives
+    timeout: 10.0  # Request timeout in seconds
+    max_depth: 1  # Maximum crawl depth for recursive scraping
+    concurrency: 5  # Maximum number of concurrent requests
+    rate_limit: 1.0  # Rate limit for requests (requests per second)
+    embedding_model: "all-MiniLM-L6-v2"  # Embedding model to use
 
   # Ollama plugin
   ollama:
-    host: "http://localhost:11434"
-    model: "llama3"
-    timeout: 30.0
-    embedding_model: "all-MiniLM-L6-v2"
+    host: "http://localhost:11434"  # Host for the Ollama plugin
+    model: "llama3"  # Model to use for the Ollama plugin
+    timeout: 30.0  # Request timeout in seconds
+    embedding_model: "all-MiniLM-L6-v2"  # Embedding model to use
 
   # LMStudio plugin
   lmstudio:
-    host: "localhost"
-    port: 8000
-    model: ""
-    embedding_model: ""
-    timeout: 30.0
+    host: "localhost"  # Host for the LMStudio plugin
+    port: 8000  # Port for the LMStudio plugin
+    model: ""  # Model to use for the LMStudio plugin
+    embedding_model: ""  # Embedding model to use
+    timeout: 30.0  # Request timeout in seconds
 
   # Social Media plugin
   socialmedia:
-    enabled_platforms: "twitter,reddit"
-    cache_ttl: 300
-    demo_mode: true
+    enabled_platforms: "twitter,reddit"  # Enabled social media platforms
+    cache_ttl: 300  # Cache time-to-live in seconds
+    demo_mode: true  # Enable demo mode
 
 # Security settings
 security:
-  enable_encryption: false
-  enable_authentication: false
-  enable_access_control: false
-  token_expiry: 86400 # 24 hours
+  enable_encryption: false  # Enable encryption for stored data
+  enable_authentication: false  # Enable authentication for accessing the database
+  enable_access_control: false  # Enable access control for the database
+  token_expiry: 86400  # Token expiry time in seconds (24 hours)
 
 # Distributed settings
 distributed:
-  host: "localhost"
-  port: 7777
-  auth_enabled: false
-  auth_key: ""
-  replication_factor: 1
-  coordinator_host: "localhost"
-  coordinator_port: 7777
+  host: "localhost"  # Host for the distributed coordinator
+  port: 7777  # Port for the distributed coordinator
+  auth_enabled: false  # Enable authentication for distributed communication
+  auth_key: ""  # Authentication key for distributed communication
+  replication_factor: 1  # Replication factor for distributed storage
+  coordinator_host: "localhost"  # Host for the distributed coordinator
+  coordinator_port: 7777  # Port for the distributed coordinator

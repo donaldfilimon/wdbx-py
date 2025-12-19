@@ -40,10 +40,10 @@ class SocialMediaPlugin(WDBXPlugin):
         super().__init__(wdbx)
 
         # Load configuration
-        platforms_config = self.get_config(
-            "ENABLED_PLATFORMS", "twitter,reddit")
+        platforms_config = self.get_config("ENABLED_PLATFORMS", "twitter,reddit")
         self.enabled_platforms = [
-            p.strip() for p in platforms_config.split(",") if p.strip()]
+            p.strip() for p in platforms_config.split(",") if p.strip()
+        ]
         self.cache_ttl = int(self.get_config("CACHE_TTL", 300))  # 5 minutes
         self.demo_mode = self.get_config("DEMO_MODE", False)
 
@@ -59,7 +59,9 @@ class SocialMediaPlugin(WDBXPlugin):
             "reddit": {
                 "client_id": self.get_config("REDDIT_CLIENT_ID", ""),
                 "client_secret": self.get_config("REDDIT_CLIENT_SECRET", ""),
-                "user_agent": self.get_config("REDDIT_USER_AGENT", f"WDBX:SocialMediaPlugin:v{self.version}"),
+                "user_agent": self.get_config(
+                    "REDDIT_USER_AGENT", f"WDBX:SocialMediaPlugin:v{self.version}"
+                ),
             },
             "facebook": {
                 "app_id": self.get_config("FACEBOOK_APP_ID", ""),
@@ -79,7 +81,8 @@ class SocialMediaPlugin(WDBXPlugin):
         self.session = None
 
         logger.info(
-            f"Initialized SocialMediaPlugin with platforms: {', '.join(self.enabled_platforms)}")
+            f"Initialized SocialMediaPlugin with platforms: {', '.join(self.enabled_platforms)}"
+        )
 
     @property
     def name(self) -> str:
@@ -154,17 +157,19 @@ class SocialMediaPlugin(WDBXPlugin):
             import tweepy
 
             # Check for required credentials
-            if (self.config["twitter"]["api_key"] and
-                self.config["twitter"]["api_secret"] and
-                self.config["twitter"]["access_token"] and
-                    self.config["twitter"]["access_secret"]):
+            if (
+                self.config["twitter"]["api_key"]
+                and self.config["twitter"]["api_secret"]
+                and self.config["twitter"]["access_token"]
+                and self.config["twitter"]["access_secret"]
+            ):
                 # Create client with OAuth 1.0a
                 client = tweepy.Client(
                     consumer_key=self.config["twitter"]["api_key"],
                     consumer_secret=self.config["twitter"]["api_secret"],
                     access_token=self.config["twitter"]["access_token"],
-                    access_token_secret=self.config["twitter"]
-                    ["access_secret"],)
+                    access_token_secret=self.config["twitter"]["access_secret"],
+                )
 
                 self.platform_clients["twitter"] = client
                 logger.info("Twitter client initialized with OAuth 1.0a")
@@ -172,7 +177,8 @@ class SocialMediaPlugin(WDBXPlugin):
             elif self.config["twitter"]["bearer_token"]:
                 # Create client with bearer token
                 client = tweepy.Client(
-                    bearer_token=self.config["twitter"]["bearer_token"])
+                    bearer_token=self.config["twitter"]["bearer_token"]
+                )
 
                 self.platform_clients["twitter"] = client
                 logger.info("Twitter client initialized with bearer token")
@@ -181,10 +187,10 @@ class SocialMediaPlugin(WDBXPlugin):
                 raise PluginError("Missing Twitter credentials")
 
         except ImportError:
-            logger.error(
-                "tweepy not installed, required for Twitter integration")
+            logger.error("tweepy not installed, required for Twitter integration")
             raise PluginError(
-                "tweepy is required for Twitter integration. Install with: pip install tweepy")
+                "tweepy is required for Twitter integration. Install with: pip install tweepy"
+            )
 
     async def _initialize_reddit(self) -> None:
         """Initialize Reddit client."""
@@ -198,8 +204,10 @@ class SocialMediaPlugin(WDBXPlugin):
             import praw
 
             # Check for required credentials
-            if (self.config["reddit"]["client_id"] and
-                    self.config["reddit"]["client_secret"]):
+            if (
+                self.config["reddit"]["client_id"]
+                and self.config["reddit"]["client_secret"]
+            ):
                 # Create client
                 client = praw.Reddit(
                     client_id=self.config["reddit"]["client_id"],
@@ -215,7 +223,8 @@ class SocialMediaPlugin(WDBXPlugin):
         except ImportError:
             logger.error("praw not installed, required for Reddit integration")
             raise PluginError(
-                "praw is required for Reddit integration. Install with: pip install praw")
+                "praw is required for Reddit integration. Install with: pip install praw"
+            )
 
     async def _initialize_facebook(self) -> None:
         """Initialize Facebook client."""
@@ -232,7 +241,8 @@ class SocialMediaPlugin(WDBXPlugin):
             if self.config["facebook"]["access_token"]:
                 # Create client
                 client = facebook.GraphAPI(
-                    access_token=self.config["facebook"]["access_token"])
+                    access_token=self.config["facebook"]["access_token"]
+                )
 
                 self.platform_clients["facebook"] = client
                 logger.info("Facebook client initialized")
@@ -241,9 +251,11 @@ class SocialMediaPlugin(WDBXPlugin):
 
         except ImportError:
             logger.error(
-                "facebook-sdk not installed, required for Facebook integration")
+                "facebook-sdk not installed, required for Facebook integration"
+            )
             raise PluginError(
-                "facebook-sdk is required for Facebook integration. Install with: pip install facebook-sdk")
+                "facebook-sdk is required for Facebook integration. Install with: pip install facebook-sdk"
+            )
 
     def _cache_key(self, platform: str, method: str, *args, **kwargs) -> str:
         """
@@ -326,7 +338,8 @@ class SocialMediaPlugin(WDBXPlugin):
 
         # Generate cache key
         cache_key = self._cache_key(
-            "search_posts", query, platforms=platforms, limit=limit)
+            "search_posts", query, platforms=platforms, limit=limit
+        )
 
         # Check cache
         if use_cache:
@@ -409,25 +422,41 @@ class SocialMediaPlugin(WDBXPlugin):
 
             # Process results
             results = []
-            users = {user.id: user for user in response.includes.get(
-                "users", [])} if response.includes else {}
+            users = (
+                {user.id: user for user in response.includes.get("users", [])}
+                if response.includes
+                else {}
+            )
 
             for tweet in response.data or []:
                 user = users.get(tweet.author_id, None)
                 tweet_data = {
-                    "id": tweet.id, "text": tweet.text,
-                    "created_at": tweet.created_at.isoformat()
-                    if hasattr(tweet, "created_at") else None,
-                    "metrics": tweet.public_metrics
-                    if hasattr(tweet, "public_metrics") else None,
-                    "platform": "twitter", }
+                    "id": tweet.id,
+                    "text": tweet.text,
+                    "created_at": (
+                        tweet.created_at.isoformat()
+                        if hasattr(tweet, "created_at")
+                        else None
+                    ),
+                    "metrics": (
+                        tweet.public_metrics
+                        if hasattr(tweet, "public_metrics")
+                        else None
+                    ),
+                    "platform": "twitter",
+                }
 
                 if user:
                     tweet_data["user"] = {
-                        "id": user.id, "name": user.name,
+                        "id": user.id,
+                        "name": user.name,
                         "username": user.username,
-                        "profile_image_url": user.profile_image_url
-                        if hasattr(user, "profile_image_url") else None, }
+                        "profile_image_url": (
+                            user.profile_image_url
+                            if hasattr(user, "profile_image_url")
+                            else None
+                        ),
+                    }
 
                 results.append(tweet_data)
 
@@ -485,13 +514,27 @@ class SocialMediaPlugin(WDBXPlugin):
                 post_data = {
                     "id": submission.id,
                     "title": submission.title,
-                    "text": submission.selftext if hasattr(submission, "selftext") else "",
+                    "text": (
+                        submission.selftext if hasattr(submission, "selftext") else ""
+                    ),
                     "url": submission.url if hasattr(submission, "url") else None,
-                    "author": submission.author.name if submission.author else "[deleted]",
-                    "subreddit": submission.subreddit.display_name if hasattr(submission, "subreddit") else None,
+                    "author": (
+                        submission.author.name if submission.author else "[deleted]"
+                    ),
+                    "subreddit": (
+                        submission.subreddit.display_name
+                        if hasattr(submission, "subreddit")
+                        else None
+                    ),
                     "score": submission.score,
-                    "created_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(submission.created_utc)),
-                    "num_comments": submission.num_comments if hasattr(submission, "num_comments") else 0,
+                    "created_at": time.strftime(
+                        "%Y-%m-%dT%H:%M:%SZ", time.gmtime(submission.created_utc)
+                    ),
+                    "num_comments": (
+                        submission.num_comments
+                        if hasattr(submission, "num_comments")
+                        else 0
+                    ),
                     "platform": "reddit",
                 }
 
@@ -548,7 +591,7 @@ class SocialMediaPlugin(WDBXPlugin):
                 fields="id,message,created_time,from",
                 limit=limit,
                 q=query,
-                type="post"
+                type="post",
             )
 
             # Process results
@@ -596,8 +639,7 @@ class SocialMediaPlugin(WDBXPlugin):
             raise PluginError(f"Platform not enabled: {platform}")
 
         # Generate cache key
-        cache_key = self._cache_key(
-            "get_user_profile", username, platform=platform)
+        cache_key = self._cache_key("get_user_profile", username, platform=platform)
 
         # Check cache
         if use_cache:
@@ -659,8 +701,13 @@ class SocialMediaPlugin(WDBXPlugin):
             # Get user profile
             response = client.get_user(
                 username=username,
-                user_fields=["description", "public_metrics",
-                             "profile_image_url", "created_at"],)
+                user_fields=[
+                    "description",
+                    "public_metrics",
+                    "profile_image_url",
+                    "created_at",
+                ],
+            )
 
             if not response.data:
                 raise PluginError(f"Twitter user not found: {username}")
@@ -668,20 +715,26 @@ class SocialMediaPlugin(WDBXPlugin):
             user = response.data
 
             # Process user data
-            user_data = {"id": user.id, "name": user.name,
-                         "username": user.username,
-                         "description": user.description
-                         if hasattr(user, "description") else None,
-                         "platform": "twitter", }
+            user_data = {
+                "id": user.id,
+                "name": user.name,
+                "username": user.username,
+                "description": (
+                    user.description if hasattr(user, "description") else None
+                ),
+                "platform": "twitter",
+            }
 
             # Add metrics if available
             if hasattr(user, "public_metrics"):
                 metrics = user.public_metrics
-                user_data.update({
-                    "followers_count": metrics.get("followers_count"),
-                    "following_count": metrics.get("following_count"),
-                    "tweet_count": metrics.get("tweet_count"),
-                })
+                user_data.update(
+                    {
+                        "followers_count": metrics.get("followers_count"),
+                        "following_count": metrics.get("following_count"),
+                        "tweet_count": metrics.get("tweet_count"),
+                    }
+                )
 
             # Add profile image if available
             if hasattr(user, "profile_image_url"):
@@ -738,11 +791,15 @@ class SocialMediaPlugin(WDBXPlugin):
             # Process user data
             user_data = {
                 "id": user.id if hasattr(user, "id") else username,
-                "name": user.name, "created_at": time.strftime(
-                    '%Y-%m-%dT%H:%M:%SZ', time.gmtime(user.created_utc)),
+                "name": user.name,
+                "created_at": time.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ", time.gmtime(user.created_utc)
+                ),
                 "comment_karma": user.comment_karma,
-                "link_karma": user.link_karma, "is_gold": user.is_gold
-                if hasattr(user, "is_gold") else False, "platform": "reddit", }
+                "link_karma": user.link_karma,
+                "is_gold": user.is_gold if hasattr(user, "is_gold") else False,
+                "platform": "reddit",
+            }
 
             return user_data
 
@@ -781,8 +838,7 @@ class SocialMediaPlugin(WDBXPlugin):
         try:
             # Note: Facebook API requires specific permissions for user data
             # This is a simplified implementation
-            user = client.get_object(
-                username, fields="id,name,username,about,picture")
+            user = client.get_object(username, fields="id,name,username,about,picture")
 
             # Process user data
             user_data = {
@@ -831,8 +887,8 @@ class SocialMediaPlugin(WDBXPlugin):
 
         # Generate cache key
         cache_key = self._cache_key(
-            "get_trending_topics", platform=platform, location=location,
-            limit=limit)
+            "get_trending_topics", platform=platform, location=location, limit=limit
+        )
 
         # Check cache
         if use_cache:
@@ -857,8 +913,9 @@ class SocialMediaPlugin(WDBXPlugin):
 
         return result
 
-    async def _get_twitter_trends(self, location: Optional[str],
-                                  limit: int) -> List[Dict[str, Any]]:
+    async def _get_twitter_trends(
+        self, location: Optional[str], limit: int
+    ) -> List[Dict[str, Any]]:
         """
         Get trending topics from Twitter.
 
@@ -893,23 +950,26 @@ class SocialMediaPlugin(WDBXPlugin):
             # Create v1 API client if not already available
             if "twitter_v1" not in self.platform_clients:
                 # Check for OAuth credentials
-                if (self.config["twitter"]["api_key"] and
-                    self.config["twitter"]["api_secret"] and
-                    self.config["twitter"]["access_token"] and
-                        self.config["twitter"]["access_secret"]):
+                if (
+                    self.config["twitter"]["api_key"]
+                    and self.config["twitter"]["api_secret"]
+                    and self.config["twitter"]["access_token"]
+                    and self.config["twitter"]["access_secret"]
+                ):
 
                     auth = tweepy.OAuth1UserHandler(
                         self.config["twitter"]["api_key"],
                         self.config["twitter"]["api_secret"],
                         self.config["twitter"]["access_token"],
-                        self.config["twitter"]["access_secret"]
+                        self.config["twitter"]["access_secret"],
                     )
 
                     api = tweepy.API(auth)
                     self.platform_clients["twitter_v1"] = api
                 else:
                     raise PluginError(
-                        "Twitter OAuth 1.0a credentials required for trends")
+                        "Twitter OAuth 1.0a credentials required for trends"
+                    )
 
             api = self.platform_clients["twitter_v1"]
 
@@ -992,13 +1052,21 @@ class SocialMediaPlugin(WDBXPlugin):
 
             for submission in submissions:
                 trend_data = {
-                    "id": submission.id, "title": submission.title,
-                    "subreddit": submission.subreddit.display_name
-                    if hasattr(submission, "subreddit") else None,
+                    "id": submission.id,
+                    "title": submission.title,
+                    "subreddit": (
+                        submission.subreddit.display_name
+                        if hasattr(submission, "subreddit")
+                        else None
+                    ),
                     "score": submission.score,
-                    "num_comments": submission.num_comments
-                    if hasattr(submission, "num_comments") else 0,
-                    "platform": "reddit", }
+                    "num_comments": (
+                        submission.num_comments
+                        if hasattr(submission, "num_comments")
+                        else 0
+                    ),
+                    "platform": "reddit",
+                }
 
                 results.append(trend_data)
 
@@ -1057,16 +1125,19 @@ class SocialMediaPlugin(WDBXPlugin):
         """
         # Try to find an embedding plugin to delegate to
         for plugin_name in [
-            "openai", "ollama", "lmstudio", "huggingface",
-                "sentencetransformers"]:
+            "openai",
+            "ollama",
+            "lmstudio",
+            "huggingface",
+            "sentencetransformers",
+        ]:
             if plugin_name in self.wdbx.plugins:
                 plugin = self.wdbx.plugins[plugin_name]
                 try:
                     embedding = await plugin.create_embedding(text)
                     return embedding
                 except Exception as e:
-                    logger.error(
-                        f"Error creating embedding with {plugin_name}: {e}")
+                    logger.error(f"Error creating embedding with {plugin_name}: {e}")
 
         # If no embedding plugin is available, try to use SentenceTransformers locally
         try:
@@ -1083,7 +1154,8 @@ class SocialMediaPlugin(WDBXPlugin):
         except ImportError:
             logger.error("sentence-transformers not installed")
             raise PluginError(
-                "No embedding plugin available and sentence-transformers not installed")
+                "No embedding plugin available and sentence-transformers not installed"
+            )
         except Exception as e:
             logger.error(f"Error creating embedding: {e}")
             raise PluginError(f"Error creating embedding: {e}")
@@ -1099,7 +1171,7 @@ class SocialMediaPlugin(WDBXPlugin):
                     "--query": "Search query",
                     "--platform": "Platform to search (default: all enabled)",
                     "--limit": "Maximum number of results per platform",
-                }
+                },
             )
 
             self.wdbx.register_command(
@@ -1109,7 +1181,7 @@ class SocialMediaPlugin(WDBXPlugin):
                 {
                     "--username": "Username to look up",
                     "--platform": "Platform name",
-                }
+                },
             )
 
             self.wdbx.register_command(
@@ -1120,14 +1192,14 @@ class SocialMediaPlugin(WDBXPlugin):
                     "--platform": "Platform name",
                     "--location": "Optional location for localized trends",
                     "--limit": "Maximum number of trends",
-                }
+                },
             )
 
             self.wdbx.register_command(
                 "socialmedia-platforms",
                 self._cmd_platforms,
                 "List enabled social media platforms",
-                {}
+                {},
             )
 
     async def _cmd_search(self, args: str):
@@ -1136,13 +1208,18 @@ class SocialMediaPlugin(WDBXPlugin):
 
         # Parse arguments
         parser = argparse.ArgumentParser(
-            description="Search for posts across social media platforms")
+            description="Search for posts across social media platforms"
+        )
         parser.add_argument("--query", required=True, help="Search query")
         parser.add_argument(
-            "--platform", help="Platform to search (default: all enabled)")
+            "--platform", help="Platform to search (default: all enabled)"
+        )
         parser.add_argument(
-            "--limit", type=int, default=5,
-            help="Maximum number of results per platform")
+            "--limit",
+            type=int,
+            default=5,
+            help="Maximum number of results per platform",
+        )
 
         try:
             parsed_args = parser.parse_args(args.split())
@@ -1157,9 +1234,7 @@ class SocialMediaPlugin(WDBXPlugin):
 
             # Search for posts
             results = await self.search_posts(
-                query=parsed_args.query,
-                platforms=platforms,
-                limit=parsed_args.limit
+                query=parsed_args.query, platforms=platforms, limit=parsed_args.limit
             )
 
             # Print results
@@ -1181,10 +1256,12 @@ class SocialMediaPlugin(WDBXPlugin):
                     if platform == "twitter":
                         user = post.get("user", {})
                         print(
-                            f"@{user.get('username', 'unknown')}: {post.get('text', '')}")
+                            f"@{user.get('username', 'unknown')}: {post.get('text', '')}"
+                        )
                     elif platform == "reddit":
                         print(
-                            f"r/{post.get('subreddit', 'unknown')} - {post.get('title', '')}")
+                            f"r/{post.get('subreddit', 'unknown')} - {post.get('title', '')}"
+                        )
                         if "text" in post and post["text"]:
                             text = post["text"]
                             if len(text) > 100:
@@ -1193,7 +1270,8 @@ class SocialMediaPlugin(WDBXPlugin):
                     elif platform == "facebook":
                         user = post.get("from", {})
                         print(
-                            f"{user.get('name', 'unknown')}: {post.get('message', '')}")
+                            f"{user.get('name', 'unknown')}: {post.get('message', '')}"
+                        )
                     else:
                         print(json.dumps(post, indent=2))
         except Exception as e:
@@ -1205,9 +1283,9 @@ class SocialMediaPlugin(WDBXPlugin):
 
         # Parse arguments
         parser = argparse.ArgumentParser(
-            description="Get a user profile from a social media platform")
-        parser.add_argument("--username", required=True,
-                            help="Username to look up")
+            description="Get a user profile from a social media platform"
+        )
+        parser.add_argument("--username", required=True, help="Username to look up")
         parser.add_argument("--platform", required=True, help="Platform name")
 
         try:
@@ -1218,8 +1296,7 @@ class SocialMediaPlugin(WDBXPlugin):
         try:
             # Get user profile
             profile = await self.get_user_profile(
-                username=parsed_args.username,
-                platform=parsed_args.platform
+                username=parsed_args.username, platform=parsed_args.platform
             )
 
             # Print profile
@@ -1234,12 +1311,13 @@ class SocialMediaPlugin(WDBXPlugin):
 
         # Parse arguments
         parser = argparse.ArgumentParser(
-            description="Get trending topics from a social media platform")
+            description="Get trending topics from a social media platform"
+        )
         parser.add_argument("--platform", required=True, help="Platform name")
+        parser.add_argument("--location", help="Optional location for localized trends")
         parser.add_argument(
-            "--location", help="Optional location for localized trends")
-        parser.add_argument("--limit", type=int, default=10,
-                            help="Maximum number of trends")
+            "--limit", type=int, default=10, help="Maximum number of trends"
+        )
 
         try:
             parsed_args = parser.parse_args(args.split())
@@ -1251,14 +1329,19 @@ class SocialMediaPlugin(WDBXPlugin):
             trends = await self.get_trending_topics(
                 platform=parsed_args.platform,
                 location=parsed_args.location,
-                limit=parsed_args.limit
+                limit=parsed_args.limit,
             )
 
             # Print trends
-            location_str = f" in {
-                parsed_args.location} "if parsed_args.location else ""
+            location_str = (
+                f" in {
+                parsed_args.location} "
+                if parsed_args.location
+                else ""
+            )
             print(
-                f"\n=== Trending on {parsed_args.platform.capitalize()}{location_str} ===")
+                f"\n=== Trending on {parsed_args.platform.capitalize()}{location_str} ==="
+            )
 
             for i, trend in enumerate(trends):
                 print(f"\n{i+1}. ", end="")
@@ -1268,10 +1351,10 @@ class SocialMediaPlugin(WDBXPlugin):
                     volume = trend.get("tweet_volume", "N/A")
                     print(f"{trend.get('name', '')} ({volume} tweets)")
                 elif parsed_args.platform == "reddit":
+                    print(f"{trend.get('title', '')} - r/{trend.get('subreddit', '')}")
                     print(
-                        f"{trend.get('title', '')} - r/{trend.get('subreddit', '')}")
-                    print(
-                        f"  Score: {trend.get('score', 'N/A')}, Comments: {trend.get('num_comments', 'N/A')}")
+                        f"  Score: {trend.get('score', 'N/A')}, Comments: {trend.get('num_comments', 'N/A')}"
+                    )
                 else:
                     print(trend.get("name", ""))
         except Exception as e:

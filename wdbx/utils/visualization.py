@@ -37,7 +37,7 @@ class VectorVisualizer:
         vectors: List[List[float]],
         method: str = "pca",
         n_components: int = 2,
-        random_state: int = 42
+        random_state: int = 42,
     ) -> np.ndarray:
         """
         Reduce dimensionality of vectors for visualization.
@@ -61,38 +61,43 @@ class VectorVisualizer:
         if method == "pca":
             try:
                 from sklearn.decomposition import PCA
+
                 pca = PCA(n_components=n_components, random_state=random_state)
                 return pca.fit_transform(vectors_np)
             except ImportError:
                 logger.error("scikit-learn not installed, required for PCA")
                 raise ImportError(
-                    "scikit-learn is required for PCA. Install with: pip install scikit-learn")
+                    "scikit-learn is required for PCA. Install with: pip install scikit-learn"
+                )
 
         elif method == "t-sne":
             try:
                 from sklearn.manifold import TSNE
-                tsne = TSNE(n_components=n_components,
-                            random_state=random_state)
+
+                tsne = TSNE(n_components=n_components, random_state=random_state)
                 return tsne.fit_transform(vectors_np)
             except ImportError:
                 logger.error("scikit-learn not installed, required for t-SNE")
                 raise ImportError(
-                    "scikit-learn is required for t-SNE. Install with: pip install scikit-learn")
+                    "scikit-learn is required for t-SNE. Install with: pip install scikit-learn"
+                )
 
         elif method == "umap":
             try:
                 import umap
-                reducer = umap.UMAP(n_components=n_components,
-                                    random_state=random_state)
+
+                reducer = umap.UMAP(
+                    n_components=n_components, random_state=random_state
+                )
                 return reducer.fit_transform(vectors_np)
             except ImportError:
                 logger.error("umap-learn not installed, required for UMAP")
                 raise ImportError(
-                    "umap-learn is required for UMAP. Install with: pip install umap-learn")
+                    "umap-learn is required for UMAP. Install with: pip install umap-learn"
+                )
 
         else:
-            raise ValueError(
-                f"Unsupported dimension reduction method: {method}")
+            raise ValueError(f"Unsupported dimension reduction method: {method}")
 
     def plot_vectors(
         self,
@@ -104,7 +109,7 @@ class VectorVisualizer:
         title: str = "Vector Space Visualization",
         width: int = 800,
         height: int = 600,
-        return_type: str = "html"
+        return_type: str = "html",
     ) -> str:
         """
         Create a plot of vector data.
@@ -132,7 +137,8 @@ class VectorVisualizer:
 
         # Reduce dimensions
         reduced_vectors = self.reduce_dimensions(
-            vectors, method, n_components, random_state=42)
+            vectors, method, n_components, random_state=42
+        )
 
         # Default labels and colors
         if labels is None:
@@ -154,8 +160,17 @@ class VectorVisualizer:
             except ImportError:
                 # Fallback to basic colors
                 basic_colors = [
-                    "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-                    "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
+                    "#1f77b4",
+                    "#ff7f0e",
+                    "#2ca02c",
+                    "#d62728",
+                    "#9467bd",
+                    "#8c564b",
+                    "#e377c2",
+                    "#7f7f7f",
+                    "#bcbd22",
+                    "#17becf",
+                ]
                 for i, label in enumerate(unique_labels):
                     label_to_color[label] = basic_colors[i % len(basic_colors)]
 
@@ -164,12 +179,12 @@ class VectorVisualizer:
         # Create plot
         if n_components == 2:
             return self._plot_2d(
-                reduced_vectors, labels, colors, title, width, height,
-                return_type)
+                reduced_vectors, labels, colors, title, width, height, return_type
+            )
         else:
             return self._plot_3d(
-                reduced_vectors, labels, colors, title, width, height,
-                return_type)
+                reduced_vectors, labels, colors, title, width, height, return_type
+            )
 
     def _plot_2d(
         self,
@@ -179,7 +194,7 @@ class VectorVisualizer:
         title: str,
         width: int,
         height: int,
-        return_type: str
+        return_type: str,
     ) -> str:
         """
         Create a 2D plot.
@@ -205,19 +220,21 @@ class VectorVisualizer:
             fig = go.Figure()
 
             # Add scatter plot
-            fig.add_trace(go.Scatter(
-                x=vectors[:, 0],
-                y=vectors[:, 1],
-                mode="markers",
-                marker=dict(
-                    size=10,
-                    color=colors,
-                    opacity=0.8,
-                    line=dict(width=1, color="white")
-                ),
-                text=labels,
-                hoverinfo="text"
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=vectors[:, 0],
+                    y=vectors[:, 1],
+                    mode="markers",
+                    marker=dict(
+                        size=10,
+                        color=colors,
+                        opacity=0.8,
+                        line=dict(width=1, color="white"),
+                    ),
+                    text=labels,
+                    hoverinfo="text",
+                )
+            )
 
             # Update layout
             fig.update_layout(
@@ -260,7 +277,8 @@ class VectorVisualizer:
         except ImportError:
             logger.error("plotly not installed, required for visualization")
             raise ImportError(
-                "plotly is required for visualization. Install with: pip install plotly kaleido")
+                "plotly is required for visualization. Install with: pip install plotly kaleido"
+            )
 
     def _plot_3d(
         self,
@@ -270,7 +288,7 @@ class VectorVisualizer:
         title: str,
         width: int,
         height: int,
-        return_type: str
+        return_type: str,
     ) -> str:
         """
         Create a 3D plot.
@@ -296,20 +314,22 @@ class VectorVisualizer:
             fig = go.Figure()
 
             # Add scatter plot
-            fig.add_trace(go.Scatter3d(
-                x=vectors[:, 0],
-                y=vectors[:, 1],
-                z=vectors[:, 2],
-                mode="markers",
-                marker=dict(
-                    size=6,
-                    color=colors,
-                    opacity=0.8,
-                    line=dict(width=0.5, color="white")
-                ),
-                text=labels,
-                hoverinfo="text"
-            ))
+            fig.add_trace(
+                go.Scatter3d(
+                    x=vectors[:, 0],
+                    y=vectors[:, 1],
+                    z=vectors[:, 2],
+                    mode="markers",
+                    marker=dict(
+                        size=6,
+                        color=colors,
+                        opacity=0.8,
+                        line=dict(width=0.5, color="white"),
+                    ),
+                    text=labels,
+                    hoverinfo="text",
+                )
+            )
 
             # Update layout
             fig.update_layout(
@@ -341,7 +361,8 @@ class VectorVisualizer:
         except ImportError:
             logger.error("plotly not installed, required for visualization")
             raise ImportError(
-                "plotly is required for visualization. Install with: pip install plotly kaleido")
+                "plotly is required for visualization. Install with: pip install plotly kaleido"
+            )
 
     def plot_similarity_matrix(
         self,
@@ -350,7 +371,7 @@ class VectorVisualizer:
         title: str = "Vector Similarity Matrix",
         width: int = 800,
         height: int = 800,
-        return_type: str = "html"
+        return_type: str = "html",
     ) -> str:
         """
         Create a similarity matrix heatmap.
@@ -382,23 +403,24 @@ class VectorVisualizer:
             normalized_vectors = vectors_np / norms
 
             # Compute similarity matrix (cosine similarity)
-            similarity_matrix = np.dot(
-                normalized_vectors, normalized_vectors.T)
+            similarity_matrix = np.dot(normalized_vectors, normalized_vectors.T)
 
             # Default labels
             if labels is None:
                 labels = [f"Vector {i+1}" for i in range(len(vectors))]
 
             # Create heatmap
-            fig = go.Figure(data=go.Heatmap(
-                z=similarity_matrix,
-                x=labels,
-                y=labels,
-                colorscale="Viridis",
-                zmin=0,
-                zmax=1,
-                colorbar=dict(title="Similarity")
-            ))
+            fig = go.Figure(
+                data=go.Heatmap(
+                    z=similarity_matrix,
+                    x=labels,
+                    y=labels,
+                    colorscale="Viridis",
+                    zmin=0,
+                    zmax=1,
+                    colorbar=dict(title="Similarity"),
+                )
+            )
 
             # Update layout
             fig.update_layout(
@@ -425,7 +447,8 @@ class VectorVisualizer:
         except ImportError:
             logger.error("plotly not installed, required for visualization")
             raise ImportError(
-                "plotly is required for visualization. Install with: pip install plotly kaleido")
+                "plotly is required for visualization. Install with: pip install plotly kaleido"
+            )
 
     def visualize_vectors_from_db(
         self,
@@ -435,7 +458,7 @@ class VectorVisualizer:
         method: str = "pca",
         n_components: int = 2,
         title: str = "Vector Database Visualization",
-        return_type: str = "html"
+        return_type: str = "html",
     ) -> str:
         """
         Visualize vectors from the database.
@@ -471,7 +494,7 @@ class VectorVisualizer:
             query_vector=[0.1] * wdbx.vector_dim,  # Dummy query vector
             limit=max_vectors,
             threshold=0.0,
-            filter_metadata=filter_metadata
+            filter_metadata=filter_metadata,
         )
 
         # Extract vectors and metadata
@@ -486,8 +509,7 @@ class VectorVisualizer:
                 labels.append(str(label))
 
                 # Use category or source for coloring
-                category = metadata.get("category", metadata.get(
-                    "source", "default"))
+                category = metadata.get("category", metadata.get("source", "default"))
                 colors.append(str(category))
 
         # Plot vectors
@@ -497,14 +519,11 @@ class VectorVisualizer:
             method=method,
             n_components=n_components,
             title=title,
-            return_type=return_type
+            return_type=return_type,
         )
 
     def create_interactive_dashboard(
-        self,
-        wdbx=None,
-        port: int = 8050,
-        debug: bool = False
+        self, wdbx=None, port: int = 8050, debug: bool = False
     ) -> None:
         """
         Create an interactive dashboard for vector visualization.
@@ -531,110 +550,191 @@ class VectorVisualizer:
             import dash_bootstrap_components as dbc
         except ImportError:
             logger.error(
-                "dash and dash-bootstrap-components not installed, required for dashboard")
+                "dash and dash-bootstrap-components not installed, required for dashboard"
+            )
             raise ImportError(
                 "dash and dash-bootstrap-components are required for the dashboard. "
-                "Install with: pip install dash dash-bootstrap-components")
+                "Install with: pip install dash dash-bootstrap-components"
+            )
 
         # Create Dash app
         app = dash.Dash(
             __name__,
             external_stylesheets=[dbc.themes.BOOTSTRAP],
-            title="WDBX Vector Visualization"
+            title="WDBX Vector Visualization",
         )
 
         # Define layout
-        app.layout = dbc.Container([
-            dbc.Row([
-                dbc.Col([
-                    html.H1("WDBX Vector Visualization Dashboard"),
-                    html.Hr(),
-                ], width=12)
-            ]),
-
-            dbc.Row([
-                dbc.Col([
-                    dbc.Card([
-                        dbc.CardHeader("Visualization Settings"),
-                        dbc.CardBody([
-                            dbc.Form([
-                                dbc.Row([
-                                    dbc.Col([
-                                        dbc.Label(
-                                            "Dimension Reduction Method:"),
-                                        dcc.Dropdown(
-                                            id="method-dropdown",
-                                            options=[
-                                                {"label": "PCA", "value": "pca"},
-                                                {"label": "t-SNE",
-                                                    "value": "t-sne"},
-                                                {"label": "UMAP", "value": "umap"},
-                                            ],
-                                            value="pca"
+        app.layout = dbc.Container(
+            [
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H1("WDBX Vector Visualization Dashboard"),
+                                html.Hr(),
+                            ],
+                            width=12,
+                        )
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                dbc.Card(
+                                    [
+                                        dbc.CardHeader("Visualization Settings"),
+                                        dbc.CardBody(
+                                            [
+                                                dbc.Form(
+                                                    [
+                                                        dbc.Row(
+                                                            [
+                                                                dbc.Col(
+                                                                    [
+                                                                        dbc.Label(
+                                                                            "Dimension Reduction Method:"
+                                                                        ),
+                                                                        dcc.Dropdown(
+                                                                            id="method-dropdown",
+                                                                            options=[
+                                                                                {
+                                                                                    "label": "PCA",
+                                                                                    "value": "pca",
+                                                                                },
+                                                                                {
+                                                                                    "label": "t-SNE",
+                                                                                    "value": "t-sne",
+                                                                                },
+                                                                                {
+                                                                                    "label": "UMAP",
+                                                                                    "value": "umap",
+                                                                                },
+                                                                            ],
+                                                                            value="pca",
+                                                                        ),
+                                                                    ],
+                                                                    width=6,
+                                                                ),
+                                                                dbc.Col(
+                                                                    [
+                                                                        dbc.Label(
+                                                                            "Number of Components:"
+                                                                        ),
+                                                                        dcc.Dropdown(
+                                                                            id="components-dropdown",
+                                                                            options=[
+                                                                                {
+                                                                                    "label": "2D",
+                                                                                    "value": 2,
+                                                                                },
+                                                                                {
+                                                                                    "label": "3D",
+                                                                                    "value": 3,
+                                                                                },
+                                                                            ],
+                                                                            value=2,
+                                                                        ),
+                                                                    ],
+                                                                    width=6,
+                                                                ),
+                                                            ]
+                                                        ),
+                                                        dbc.Row(
+                                                            [
+                                                                dbc.Col(
+                                                                    [
+                                                                        dbc.Label(
+                                                                            "Max Vectors:"
+                                                                        ),
+                                                                        dbc.Input(
+                                                                            id="max-vectors",
+                                                                            type="number",
+                                                                            value=500,
+                                                                        ),
+                                                                    ],
+                                                                    width=6,
+                                                                ),
+                                                                dbc.Col(
+                                                                    [
+                                                                        dbc.Label(
+                                                                            "Filter by Source:"
+                                                                        ),
+                                                                        dcc.Dropdown(
+                                                                            id="source-dropdown",
+                                                                            options=[
+                                                                                {
+                                                                                    "label": "All",
+                                                                                    "value": "all",
+                                                                                }
+                                                                            ],
+                                                                            value="all",
+                                                                        ),
+                                                                    ],
+                                                                    width=6,
+                                                                ),
+                                                            ]
+                                                        ),
+                                                        dbc.Button(
+                                                            "Update Visualization",
+                                                            id="update-button",
+                                                            color="primary",
+                                                            className="mt-3",
+                                                        ),
+                                                    ]
+                                                ),
+                                            ]
                                         ),
-                                    ], width=6),
-                                    dbc.Col([
-                                        dbc.Label("Number of Components:"),
-                                        dcc.Dropdown(
-                                            id="components-dropdown",
-                                            options=[
-                                                {"label": "2D", "value": 2},
-                                                {"label": "3D", "value": 3},
-                                            ],
-                                            value=2
+                                    ]
+                                ),
+                            ],
+                            width=4,
+                        ),
+                        dbc.Col(
+                            [
+                                dbc.Card(
+                                    [
+                                        dbc.CardHeader("Vector Visualization"),
+                                        dbc.CardBody(
+                                            [
+                                                dcc.Loading(
+                                                    id="loading-visualization",
+                                                    type="circle",
+                                                    children=html.Div(
+                                                        id="visualization-content"
+                                                    ),
+                                                ),
+                                            ]
                                         ),
-                                    ], width=6),
-                                ]),
-                                dbc.Row([
-                                    dbc.Col([
-                                        dbc.Label("Max Vectors:"),
-                                        dbc.Input(id="max-vectors",
-                                                  type="number", value=500),
-                                    ], width=6),
-                                    dbc.Col([
-                                        dbc.Label("Filter by Source:"),
-                                        dcc.Dropdown(
-                                            id="source-dropdown",
-                                            options=[
-                                                {"label": "All", "value": "all"}],
-                                            value="all"
-                                        ),
-                                    ], width=6),
-                                ]),
-                                dbc.Button(
-                                    "Update Visualization", id="update-button", color="primary", className="mt-3"),
-                            ]),
-                        ]),
-                    ]),
-                ], width=4),
-
-                dbc.Col([
-                    dbc.Card([
-                        dbc.CardHeader("Vector Visualization"),
-                        dbc.CardBody([
-                            dcc.Loading(
-                                id="loading-visualization",
-                                type="circle",
-                                children=html.Div(id="visualization-content")
-                            ),
-                        ]),
-                    ]),
-                ], width=8),
-            ]),
-
-            dbc.Row([
-                dbc.Col([
-                    html.Hr(),
-                    html.Div(id="stats-content", className="small text-muted"),
-                ], width=12),
-            ]),
-
-        ], fluid=True, className="mt-4")
+                                    ]
+                                ),
+                            ],
+                            width=8,
+                        ),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.Hr(),
+                                html.Div(
+                                    id="stats-content", className="small text-muted"
+                                ),
+                            ],
+                            width=12,
+                        ),
+                    ]
+                ),
+            ],
+            fluid=True,
+            className="mt-4",
+        )
 
         # Update source dropdown on page load
         @app.callback(
-            Output("source-dropdown", "options"),
-            Input("update-button", "n_clicks")
+            Output("source-dropdown", "options"), Input("update-button", "n_clicks")
         )
         def update_source_dropdown(n_clicks):
             # Get all unique sources from database
@@ -642,7 +742,7 @@ class VectorVisualizer:
                 results = wdbx.vector_search(
                     query_vector=[0.1] * wdbx.vector_dim,  # Dummy query vector
                     limit=1000,
-                    threshold=0.0
+                    threshold=0.0,
                 )
 
                 sources = set()
@@ -668,14 +768,16 @@ class VectorVisualizer:
             State("method-dropdown", "value"),
             State("components-dropdown", "value"),
             State("max-vectors", "value"),
-            State("source-dropdown", "value")
+            State("source-dropdown", "value"),
         )
-        def update_visualization(
-                n_clicks, method, n_components, max_vectors, source):
+        def update_visualization(n_clicks, method, n_components, max_vectors, source):
             if n_clicks is None:
                 # Initial load
                 total_vectors = wdbx.count_vectors()
-                return "Click 'Update Visualization' to generate the visualization.", f"Database contains {total_vectors} vectors."
+                return (
+                    "Click 'Update Visualization' to generate the visualization.",
+                    f"Database contains {total_vectors} vectors.",
+                )
 
             try:
                 # Prepare filter
@@ -690,7 +792,7 @@ class VectorVisualizer:
                     max_vectors=max_vectors,
                     method=method,
                     n_components=n_components,
-                    title=f"Vector Visualization ({method.upper()}, {n_components}D)"
+                    title=f"Vector Visualization ({method.upper()}, {n_components}D)",
                 )
 
                 # Get stats
@@ -700,11 +802,17 @@ class VectorVisualizer:
                 else:
                     stats_text = f"Showing up to {max_vectors} vectors from all sources. Total vectors in database: {total_vectors}."
 
-                return html.Div(dangerouslySetInnerHTML={"__html": visualization}), stats_text
+                return (
+                    html.Div(dangerouslySetInnerHTML={"__html": visualization}),
+                    stats_text,
+                )
             except Exception as e:
                 logger.error(f"Error updating visualization: {e}")
-                return html.Div(f"Error: {str(e)} "), f"Database contains {
-                    wdbx.count_vectors()}  vectors."
+                return (
+                    html.Div(f"Error: {str(e)} "),
+                    f"Database contains {
+                    wdbx.count_vectors()}  vectors.",
+                )
 
         # Run the app
         app.run_server(host="0.0.0.0", port=port, debug=debug)

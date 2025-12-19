@@ -70,8 +70,10 @@ class WDBXSecurity:
             }
         }
 
-        logger.info(f"Initialized security manager with encryption={enable_encryption}, "
-                    f"authentication={enable_authentication}, access_control={enable_access_control}")
+        logger.info(
+            f"Initialized security manager with encryption={enable_encryption}, "
+            f"authentication={enable_authentication}, access_control={enable_access_control}"
+        )
 
     def _generate_secret_key(self) -> str:
         """
@@ -83,7 +85,9 @@ class WDBXSecurity:
         key = os.urandom(32)
         return base64.b64encode(key).decode("utf-8")
 
-    def hash_password(self, password: str, salt: Optional[str] = None) -> Tuple[str, str]:
+    def hash_password(
+        self, password: str, salt: Optional[str] = None
+    ) -> Tuple[str, str]:
         """
         Hash a password with a salt.
 
@@ -103,13 +107,12 @@ class WDBXSecurity:
             password.encode("utf-8"),
             salt.encode("utf-8"),
             100000,  # 100,000 iterations
-            dklen=32
+            dklen=32,
         ).hex()
 
         return key, salt
 
-    def verify_password(
-            self, password: str, hashed_password: str, salt: str) -> bool:
+    def verify_password(self, password: str, hashed_password: str, salt: str) -> bool:
         """
         Verify a password against a hash.
 
@@ -124,8 +127,7 @@ class WDBXSecurity:
         key, _ = self.hash_password(password, salt)
         return hmac.compare_digest(key, hashed_password)
 
-    def generate_token(
-            self, user_id: str, user_roles: List[str] = None) -> str:
+    def generate_token(self, user_id: str, user_roles: List[str] = None) -> str:
         """
         Generate an authentication token.
 
@@ -137,8 +139,7 @@ class WDBXSecurity:
             Authentication token
         """
         if not self.enable_authentication:
-            logger.warning(
-                "Authentication is disabled, but generate_token was called")
+            logger.warning("Authentication is disabled, but generate_token was called")
 
         # Prepare token data
         token_data = {
@@ -155,14 +156,11 @@ class WDBXSecurity:
 
         # Sign token
         signature = hmac.new(
-            self.secret_key.encode("utf-8"),
-            token_bytes,
-            hashlib.sha256
+            self.secret_key.encode("utf-8"), token_bytes, hashlib.sha256
         ).digest()
 
         # Combine token and signature
-        combined = base64.b64encode(
-            token_bytes) + b"." + base64.b64encode(signature)
+        combined = base64.b64encode(token_bytes) + b"." + base64.b64encode(signature)
         token = combined.decode("utf-8")
 
         # Store active token
@@ -181,8 +179,7 @@ class WDBXSecurity:
             Token data if valid, None otherwise
         """
         if not self.enable_authentication:
-            logger.warning(
-                "Authentication is disabled, but verify_token was called")
+            logger.warning("Authentication is disabled, but verify_token was called")
             return {"user_id": "anonymous", "roles": ["user"]}
 
         try:
@@ -218,9 +215,7 @@ class WDBXSecurity:
 
             # Verify signature
             expected_signature = hmac.new(
-                self.secret_key.encode("utf-8"),
-                token_bytes,
-                hashlib.sha256
+                self.secret_key.encode("utf-8"), token_bytes, hashlib.sha256
             ).digest()
 
             actual_signature = base64.b64decode(signature_b64)
@@ -278,8 +273,7 @@ class WDBXSecurity:
 
         return len(tokens_to_revoke)
 
-    def set_access_policy(
-            self, role: str, permissions: Dict[str, bool]) -> None:
+    def set_access_policy(self, role: str, permissions: Dict[str, bool]) -> None:
         """
         Set access policy for a role.
 
@@ -289,7 +283,8 @@ class WDBXSecurity:
         """
         if not self.enable_access_control:
             logger.warning(
-                "Access control is disabled, but set_access_policy was called")
+                "Access control is disabled, but set_access_policy was called"
+            )
 
         self.access_policies[role] = permissions
 
@@ -309,15 +304,11 @@ class WDBXSecurity:
 
         if not self.enable_authentication:
             # Use default policy if authentication is disabled
-            return self.access_policies.get(
-                "default", {}).get(
-                permission, False)
+            return self.access_policies.get("default", {}).get(permission, False)
 
         if token is None:
             # Anonymous access
-            return self.access_policies.get(
-                "anonymous", {}).get(
-                permission, False)
+            return self.access_policies.get("anonymous", {}).get(permission, False)
 
         # Verify token
         token_data = self.verify_token(token)
@@ -368,8 +359,9 @@ class WDBXSecurity:
                 data = data.encode("utf-8")
 
             # Create encryption key from secret key
-            key = base64.urlsafe_b64encode(hashlib.sha256(
-                self.secret_key.encode("utf-8")).digest())
+            key = base64.urlsafe_b64encode(
+                hashlib.sha256(self.secret_key.encode("utf-8")).digest()
+            )
             fernet = Fernet(key)
 
             # Encrypt data
@@ -379,12 +371,15 @@ class WDBXSecurity:
         except ImportError:
             logger.error("cryptography not installed, required for encryption")
             raise ImportError(
-                "cryptography is required for encryption. Install with: pip install cryptography")
+                "cryptography is required for encryption. Install with: pip install cryptography"
+            )
         except Exception as e:
             logger.error(f"Error encrypting data: {e}")
             raise ValueError(f"Error encrypting data: {e}")
 
-    def decrypt_data(self, encrypted_data: str, data_type: str = "bytes") -> Union[str, bytes, Dict, List]:
+    def decrypt_data(
+        self, encrypted_data: str, data_type: str = "bytes"
+    ) -> Union[str, bytes, Dict, List]:
         """
         Decrypt data.
 
@@ -406,8 +401,9 @@ class WDBXSecurity:
             from cryptography.fernet import Fernet
 
             # Create encryption key from secret key
-            key = base64.urlsafe_b64encode(hashlib.sha256(
-                self.secret_key.encode("utf-8")).digest())
+            key = base64.urlsafe_b64encode(
+                hashlib.sha256(self.secret_key.encode("utf-8")).digest()
+            )
             fernet = Fernet(key)
 
             # Decrypt data
@@ -426,13 +422,15 @@ class WDBXSecurity:
         except ImportError:
             logger.error("cryptography not installed, required for encryption")
             raise ImportError(
-                "cryptography is required for encryption. Install with: pip install cryptography")
+                "cryptography is required for encryption. Install with: pip install cryptography"
+            )
         except Exception as e:
             logger.error(f"Error decrypting data: {e}")
             raise ValueError(f"Error decrypting data: {e}")
 
-    def secure_metadata(self, metadata: Dict[str, Any],
-                        sensitive_fields: List[str]) -> Dict[str, Any]:
+    def secure_metadata(
+        self, metadata: Dict[str, Any], sensitive_fields: List[str]
+    ) -> Dict[str, Any]:
         """
         Encrypt sensitive fields in metadata.
 
@@ -488,7 +486,8 @@ class WDBXSecurity:
                 # Decrypt the field
                 try:
                     decrypted_value = self.decrypt_data(
-                        encrypted_value, data_type="json")
+                        encrypted_value, data_type="json"
+                    )
 
                     # Replace with decrypted value
                     restored_metadata[field] = decrypted_value
@@ -515,8 +514,8 @@ class WDBXSecurity:
             security = HTTPBearer()
 
             async def auth_middleware(
-                    request: Request, credentials:
-                    HTTPAuthorizationCredentials = None):
+                request: Request, credentials: HTTPAuthorizationCredentials = None
+            ):
                 if not self.enable_authentication:
                     return {"user_id": "anonymous", "roles": ["user"]}
 
@@ -541,4 +540,5 @@ class WDBXSecurity:
         except ImportError:
             logger.error("fastapi not installed, required for auth middleware")
             raise ImportError(
-                "fastapi is required for auth middleware. Install with: pip install fastapi")
+                "fastapi is required for auth middleware. Install with: pip install fastapi"
+            )

@@ -44,6 +44,7 @@ async def wdbx_with_plugins(temp_dir):
     # Clean up
     await wdbx.shutdown()
 
+
 # Test loading plugins
 
 
@@ -54,8 +55,7 @@ async def test_plugins_loaded(wdbx_with_plugins):
     assert len(wdbx_with_plugins.plugins) > 0
 
     # Get plugin info
-    plugin_names = [plugin.name for plugin in
-                    wdbx_with_plugins.plugins.values()]
+    plugin_names = [plugin.name for plugin in wdbx_with_plugins.plugins.values()]
     assert "webscraper" in plugin_names
 
 
@@ -91,6 +91,7 @@ async def test_plugin_registration():
     # Clean up
     await wdbx.shutdown()
 
+
 # Test WebScraperPlugin
 
 
@@ -109,7 +110,9 @@ async def test_webscraper_plugin(wdbx_with_plugins):
         mock_response = MagicMock()
         mock_response.status = 200
         mock_response.headers = {"Content-Type": "text/html"}
-        mock_response.text.return_value = "<html><body><h1>Test Page</h1><p>This is a test.</p></body></html>"
+        mock_response.text.return_value = (
+            "<html><body><h1>Test Page</h1><p>This is a test.</p></body></html>"
+        )
 
         # Configure the session
         mock_session_instance = MagicMock()
@@ -152,6 +155,7 @@ async def test_webscraper_embedding(wdbx_with_plugins):
     # Verify model was called
     mock_model.encode.assert_called_once_with("Test text")
 
+
 # Test OllamaPlugin
 
 
@@ -169,11 +173,7 @@ async def test_ollama_plugin():
         # Configure the mock
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json.return_value = {
-            "data": [
-                {"embedding": [0.1] * 384}
-            ]
-        }
+        mock_response.json.return_value = {"data": [{"embedding": [0.1] * 384}]}
 
         # Configure the session
         mock_session_instance = MagicMock()
@@ -202,6 +202,7 @@ async def test_ollama_plugin():
     # Clean up
     await wdbx.shutdown()
 
+
 # Test LMStudioPlugin
 
 
@@ -220,18 +221,14 @@ async def test_lmstudio_plugin():
         mock_embedding_response = MagicMock()
         mock_embedding_response.status = 200
         mock_embedding_response.json.return_value = {
-            "data": [
-                {"embedding": [0.2] * 384}
-            ]
+            "data": [{"embedding": [0.2] * 384}]
         }
 
         # Configure the mock for chat
         mock_chat_response = MagicMock()
         mock_chat_response.status = 200
         mock_chat_response.json.return_value = {
-            "choices": [
-                {"message": {"content": "Test response"}}
-            ]
+            "choices": [{"message": {"content": "Test response"}}]
         }
 
         # Configure the session
@@ -265,9 +262,7 @@ async def test_lmstudio_plugin():
         assert all(x == 0.2 for x in embedding)
 
         # Test chat
-        messages = [
-            {"role": "user", "content": "Test message"}
-        ]
+        messages = [{"role": "user", "content": "Test message"}]
         response = await lmstudio.chat(messages)
 
         # Verify response
@@ -275,6 +270,7 @@ async def test_lmstudio_plugin():
 
     # Clean up
     await wdbx.shutdown()
+
 
 # Test Plugin Manager
 
@@ -337,6 +333,7 @@ async def test_plugin_manager():
 
     # Clean up
     await wdbx.shutdown()
+
 
 # Test Plugin Errors
 

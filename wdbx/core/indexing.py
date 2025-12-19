@@ -99,7 +99,9 @@ class VectorIndex(ABC):
         pass
 
     @abstractmethod
-    def search(self, query_vector: np.ndarray, limit: int = 10) -> List[Tuple[str, float]]:
+    def search(
+        self, query_vector: np.ndarray, limit: int = 10
+    ) -> List[Tuple[str, float]]:
         """
         Search for similar vectors.
 
@@ -113,7 +115,9 @@ class VectorIndex(ABC):
         pass
 
     @abstractmethod
-    async def search_async(self, query_vector: np.ndarray, limit: int = 10) -> List[Tuple[str, float]]:
+    async def search_async(
+        self, query_vector: np.ndarray, limit: int = 10
+    ) -> List[Tuple[str, float]]:
         """
         Asynchronously search for similar vectors.
 
@@ -255,7 +259,8 @@ class HNSWIndex(VectorIndex):
         self._load_index()
 
         logger.debug(
-            f"Initialized HNSW index with dim={vector_dim}, M={self.m}, ef_construction={self.ef_construction}")
+            f"Initialized HNSW index with dim={vector_dim}, M={self.m}, ef_construction={self.ef_construction}"
+        )
 
     def _init_index(self):
         """Initialize the HNSW index."""
@@ -263,13 +268,13 @@ class HNSWIndex(VectorIndex):
             import hnswlib
 
             # Create the index
-            self.index = hnswlib.Index(space='cosine', dim=self.vector_dim)
+            self.index = hnswlib.Index(space="cosine", dim=self.vector_dim)
 
             # Initialize with parameters
             self.index.init_index(
                 max_elements=self.max_elements,
                 ef_construction=self.ef_construction,
-                M=self.m
+                M=self.m,
             )
 
             # Set search parameters
@@ -277,30 +282,30 @@ class HNSWIndex(VectorIndex):
 
         except ImportError:
             logger.error(
-                "hnswlib not installed. Please install with: pip install hnswlib")
+                "hnswlib not installed. Please install with: pip install hnswlib"
+            )
             raise
 
     def _load_index(self):
         """Load the index from disk if it exists."""
-        index_file = self.index_path.with_suffix('.bin')
-        mapping_file = self.index_path.with_suffix('.mapping')
+        index_file = self.index_path.with_suffix(".bin")
+        mapping_file = self.index_path.with_suffix(".mapping")
 
         if index_file.exists() and mapping_file.exists():
             try:
                 # Load the index
-                self.index.load_index(
-                    str(index_file),
-                    max_elements=self.max_elements)
+                self.index.load_index(str(index_file), max_elements=self.max_elements)
 
                 # Load the ID mapping
-                with open(mapping_file, 'rb') as f:
+                with open(mapping_file, "rb") as f:
                     mapping_data = pickle.load(f)
-                    self.id_to_index = mapping_data.get('id_to_index', {})
-                    self.index_to_id = mapping_data.get('index_to_id', {})
-                    self.next_index = mapping_data.get('next_index', 0)
+                    self.id_to_index = mapping_data.get("id_to_index", {})
+                    self.index_to_id = mapping_data.get("index_to_id", {})
+                    self.next_index = mapping_data.get("next_index", 0)
 
                 logger.debug(
-                    f"Loaded HNSW index from {index_file} with {len(self.id_to_index)} vectors")
+                    f"Loaded HNSW index from {index_file} with {len(self.id_to_index)} vectors"
+                )
             except Exception as e:
                 logger.error(f"Error loading HNSW index: {e}")
                 # Reinitialize the index
@@ -314,24 +319,25 @@ class HNSWIndex(VectorIndex):
         if not self.index_path.parent.exists():
             self.index_path.parent.mkdir(parents=True, exist_ok=True)
 
-        index_file = self.index_path.with_suffix('.bin')
-        mapping_file = self.index_path.with_suffix('.mapping')
+        index_file = self.index_path.with_suffix(".bin")
+        mapping_file = self.index_path.with_suffix(".mapping")
 
         try:
             # Save the index
             self.index.save_index(str(index_file))
 
             # Save the ID mapping
-            with open(mapping_file, 'wb') as f:
+            with open(mapping_file, "wb") as f:
                 mapping_data = {
-                    'id_to_index': self.id_to_index,
-                    'index_to_id': self.index_to_id,
-                    'next_index': self.next_index
+                    "id_to_index": self.id_to_index,
+                    "index_to_id": self.index_to_id,
+                    "next_index": self.next_index,
                 }
                 pickle.dump(mapping_data, f)
 
             logger.debug(
-                f"Saved HNSW index to {index_file} with {len(self.id_to_index)} vectors")
+                f"Saved HNSW index to {index_file} with {len(self.id_to_index)} vectors"
+            )
             return True
         except Exception as e:
             logger.error(f"Error saving HNSW index: {e}")
@@ -398,12 +404,7 @@ class HNSWIndex(VectorIndex):
             True if the vector was added successfully
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool,
-            self.add,
-            vector_id,
-            vector
-        )
+        return await loop.run_in_executor(self.thread_pool, self.add, vector_id, vector)
 
     def batch_add(self, vectors: Dict[str, np.ndarray]) -> bool:
         """
@@ -464,13 +465,11 @@ class HNSWIndex(VectorIndex):
             True if the vectors were added successfully
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool,
-            self.batch_add,
-            vectors
-        )
+        return await loop.run_in_executor(self.thread_pool, self.batch_add, vectors)
 
-    def search(self, query_vector: np.ndarray, limit: int = 10) -> List[Tuple[str, float]]:
+    def search(
+        self, query_vector: np.ndarray, limit: int = 10
+    ) -> List[Tuple[str, float]]:
         """
         Search for similar vectors.
 
@@ -488,8 +487,7 @@ class HNSWIndex(VectorIndex):
                 return []
 
             # Perform the search
-            indices, distances = self.index.knn_query(
-                query_vector, k=actual_limit)
+            indices, distances = self.index.knn_query(query_vector, k=actual_limit)
 
             # Convert distances to similarities (for cosine distance)
             similarities = 1.0 - distances[0]
@@ -506,7 +504,9 @@ class HNSWIndex(VectorIndex):
             logger.error(f"Error searching HNSW index: {e}")
             return []
 
-    async def search_async(self, query_vector: np.ndarray, limit: int = 10) -> List[Tuple[str, float]]:
+    async def search_async(
+        self, query_vector: np.ndarray, limit: int = 10
+    ) -> List[Tuple[str, float]]:
         """
         Asynchronously search for similar vectors.
 
@@ -519,10 +519,7 @@ class HNSWIndex(VectorIndex):
         """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            self.thread_pool,
-            self.search,
-            query_vector,
-            limit
+            self.thread_pool, self.search, query_vector, limit
         )
 
     def remove(self, vector_id: str) -> bool:
@@ -573,11 +570,7 @@ class HNSWIndex(VectorIndex):
             True if the vector was removed, False if it wasn't found
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool,
-            self.remove,
-            vector_id
-        )
+        return await loop.run_in_executor(self.thread_pool, self.remove, vector_id)
 
     def clear(self) -> bool:
         """
@@ -612,10 +605,7 @@ class HNSWIndex(VectorIndex):
             True if the index was cleared successfully
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool,
-            self.clear
-        )
+        return await loop.run_in_executor(self.thread_pool, self.clear)
 
     def optimize(self) -> bool:
         """
@@ -660,7 +650,7 @@ class HNSWIndex(VectorIndex):
             "m": self.m,
             "ef_construction": self.ef_construction,
             "ef_search": self.ef_search,
-            "max_elements": self.max_elements
+            "max_elements": self.max_elements,
         }
 
 
@@ -674,8 +664,12 @@ class FaissIndex(VectorIndex):
     """
 
     def __init__(
-            self, vector_dim: int, index_path: Path, use_gpu: bool = False,
-            config: Any = None):
+        self,
+        vector_dim: int,
+        index_path: Path,
+        use_gpu: bool = False,
+        config: Any = None,
+    ):
         """
         Initialize the FAISS index.
 
@@ -709,7 +703,8 @@ class FaissIndex(VectorIndex):
         self._load_index()
 
         logger.debug(
-            f"Initialized FAISS index with dim={vector_dim}, type={self.index_type}, nprobe={self.nprobe}")
+            f"Initialized FAISS index with dim={vector_dim}, type={self.index_type}, nprobe={self.nprobe}"
+        )
 
     def _create_index(self):
         """Create a FAISS index based on configuration."""
@@ -726,43 +721,46 @@ class FaissIndex(VectorIndex):
                 # Number of centroids (adjust based on dataset size)
                 nlist = max(int(self.config.get("FAISS_NLIST", 100)), 1)
                 self.index = faiss.IndexIVFFlat(
-                    quantizer, self.vector_dim, nlist, faiss.METRIC_INNER_PRODUCT)
+                    quantizer, self.vector_dim, nlist, faiss.METRIC_INNER_PRODUCT
+                )
                 # Need to train IVF index with some vectors
                 self.index_needs_training = True
             elif self.index_type == "HNSW":
                 # HNSW index in FAISS
                 m = int(self.config.get("FAISS_HNSW_M", 32))
                 self.index = faiss.IndexHNSWFlat(
-                    self.vector_dim, m, faiss.METRIC_INNER_PRODUCT)
+                    self.vector_dim, m, faiss.METRIC_INNER_PRODUCT
+                )
             else:
                 # Default to flat index
                 logger.warning(
-                    f"Unknown FAISS index type '{self.index_type}', defaulting to Flat")
+                    f"Unknown FAISS index type '{self.index_type}', defaulting to Flat"
+                )
                 self.index = faiss.IndexFlatIP(self.vector_dim)
 
             # Enable GPU if requested and available
             if self.use_gpu:
                 try:
                     gpu_resources = faiss.StandardGpuResources()
-                    self.index = faiss.index_cpu_to_gpu(
-                        gpu_resources, 0, self.index)
+                    self.index = faiss.index_cpu_to_gpu(gpu_resources, 0, self.index)
                     logger.info("FAISS using GPU acceleration")
                 except Exception as e:
                     logger.warning(f"Failed to use GPU for FAISS: {e}")
 
             # Set search parameters
-            if hasattr(self.index, 'nprobe'):
+            if hasattr(self.index, "nprobe"):
                 self.index.nprobe = self.nprobe
 
         except ImportError:
             logger.error(
-                "FAISS not installed. Please install with: pip install faiss-cpu or faiss-gpu")
+                "FAISS not installed. Please install with: pip install faiss-cpu or faiss-gpu"
+            )
             raise
 
     def _load_index(self):
         """Load the index from disk if it exists."""
-        index_file = self.index_path.with_suffix('.faiss')
-        mapping_file = self.index_path.with_suffix('.mapping')
+        index_file = self.index_path.with_suffix(".faiss")
+        mapping_file = self.index_path.with_suffix(".mapping")
 
         if index_file.exists() and mapping_file.exists():
             try:
@@ -772,28 +770,30 @@ class FaissIndex(VectorIndex):
                 self.index = faiss.read_index(str(index_file))
 
                 # Set search parameters
-                if hasattr(self.index, 'nprobe'):
+                if hasattr(self.index, "nprobe"):
                     self.index.nprobe = self.nprobe
 
                 # Load the ID mapping
-                with open(mapping_file, 'rb') as f:
+                with open(mapping_file, "rb") as f:
                     mapping_data = pickle.load(f)
-                    self.id_to_index = mapping_data.get('id_to_index', {})
-                    self.index_to_id = mapping_data.get('index_to_id', {})
-                    self.next_index = mapping_data.get('next_index', 0)
+                    self.id_to_index = mapping_data.get("id_to_index", {})
+                    self.index_to_id = mapping_data.get("index_to_id", {})
+                    self.next_index = mapping_data.get("next_index", 0)
 
                 # Enable GPU if requested and available
                 if self.use_gpu:
                     try:
                         gpu_resources = faiss.StandardGpuResources()
                         self.index = faiss.index_cpu_to_gpu(
-                            gpu_resources, 0, self.index)
+                            gpu_resources, 0, self.index
+                        )
                         logger.info("FAISS using GPU acceleration")
                     except Exception as e:
                         logger.warning(f"Failed to use GPU for FAISS: {e}")
 
                 logger.debug(
-                    f"Loaded FAISS index from {index_file} with {len(self.id_to_index)} vectors")
+                    f"Loaded FAISS index from {index_file} with {len(self.id_to_index)} vectors"
+                )
             except Exception as e:
                 logger.error(f"Error loading FAISS index: {e}")
                 # Reinitialize the index
@@ -807,8 +807,8 @@ class FaissIndex(VectorIndex):
         if not self.index_path.parent.exists():
             self.index_path.parent.mkdir(parents=True, exist_ok=True)
 
-        index_file = self.index_path.with_suffix('.faiss')
-        mapping_file = self.index_path.with_suffix('.mapping')
+        index_file = self.index_path.with_suffix(".faiss")
+        mapping_file = self.index_path.with_suffix(".mapping")
 
         try:
             import faiss
@@ -821,16 +821,17 @@ class FaissIndex(VectorIndex):
                 faiss.write_index(self.index, str(index_file))
 
             # Save the ID mapping
-            with open(mapping_file, 'wb') as f:
+            with open(mapping_file, "wb") as f:
                 mapping_data = {
-                    'id_to_index': self.id_to_index,
-                    'index_to_id': self.index_to_id,
-                    'next_index': self.next_index
+                    "id_to_index": self.id_to_index,
+                    "index_to_id": self.index_to_id,
+                    "next_index": self.next_index,
                 }
                 pickle.dump(mapping_data, f)
 
             logger.debug(
-                f"Saved FAISS index to {index_file} with {len(self.id_to_index)} vectors")
+                f"Saved FAISS index to {index_file} with {len(self.id_to_index)} vectors"
+            )
             return True
         except Exception as e:
             logger.error(f"Error saving FAISS index: {e}")
@@ -867,13 +868,12 @@ class FaissIndex(VectorIndex):
         """
         try:
             # Check if index needs training
-            if hasattr(
-                    self, 'index_needs_training') and self.index_needs_training:
+            if hasattr(self, "index_needs_training") and self.index_needs_training:
                 if self.next_index > 0:
                     # We have enough vectors now, train the index
                     vectors_for_training = np.array(
-                        [vector.astype(np.float32)
-                         for vector in self.vectors.values()])
+                        [vector.astype(np.float32) for vector in self.vectors.values()]
+                    )
                     self.index.train(vectors_for_training)
                     self.index_needs_training = False
                 else:
@@ -883,8 +883,7 @@ class FaissIndex(VectorIndex):
                     return True
 
             # Normalize vector for cosine similarity
-            normalized_vector = self._normalize_vector(
-                vector.astype(np.float32))
+            normalized_vector = self._normalize_vector(vector.astype(np.float32))
 
             # Add the vector to the index
             # Reshape to 2D array with a single row
@@ -917,12 +916,7 @@ class FaissIndex(VectorIndex):
             True if the vector was added successfully
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool,
-            self.add,
-            vector_id,
-            vector
-        )
+        return await loop.run_in_executor(self.thread_pool, self.add, vector_id, vector)
 
     def batch_add(self, vectors: Dict[str, np.ndarray]) -> bool:
         """
@@ -940,14 +934,15 @@ class FaissIndex(VectorIndex):
         try:
             # Prepare vectors and IDs
             vector_ids = list(vectors.keys())
-            vector_data = np.array([
-                self._normalize_vector(vector.astype(np.float32))
-                for vector in vectors.values()
-            ])
+            vector_data = np.array(
+                [
+                    self._normalize_vector(vector.astype(np.float32))
+                    for vector in vectors.values()
+                ]
+            )
 
             # Check if index needs training
-            if hasattr(
-                    self, 'index_needs_training') and self.index_needs_training:
+            if hasattr(self, "index_needs_training") and self.index_needs_training:
                 self.index.train(vector_data)
                 self.index_needs_training = False
 
@@ -983,13 +978,11 @@ class FaissIndex(VectorIndex):
             True if the vectors were added successfully
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool,
-            self.batch_add,
-            vectors
-        )
+        return await loop.run_in_executor(self.thread_pool, self.batch_add, vectors)
 
-    def search(self, query_vector: np.ndarray, limit: int = 10) -> List[Tuple[str, float]]:
+    def search(
+        self, query_vector: np.ndarray, limit: int = 10
+    ) -> List[Tuple[str, float]]:
         """
         Search for similar vectors.
 
@@ -1006,8 +999,7 @@ class FaissIndex(VectorIndex):
                 return []
 
             # Normalize query vector
-            normalized_query = self._normalize_vector(
-                query_vector.astype(np.float32))
+            normalized_query = self._normalize_vector(query_vector.astype(np.float32))
 
             # Adjust limit based on index size
             actual_limit = min(limit, self.next_index)
@@ -1018,8 +1010,7 @@ class FaissIndex(VectorIndex):
             normalized_query = normalized_query.reshape(1, -1)
 
             # Perform the search
-            distances, indices = self.index.search(
-                normalized_query, actual_limit)
+            distances, indices = self.index.search(normalized_query, actual_limit)
 
             # Convert distances to similarities (for inner product)
             # FAISS inner product returns higher values for better matches
@@ -1038,7 +1029,9 @@ class FaissIndex(VectorIndex):
             logger.error(f"Error searching FAISS index: {e}")
             return []
 
-    async def search_async(self, query_vector: np.ndarray, limit: int = 10) -> List[Tuple[str, float]]:
+    async def search_async(
+        self, query_vector: np.ndarray, limit: int = 10
+    ) -> List[Tuple[str, float]]:
         """
         Asynchronously search for similar vectors.
 
@@ -1051,10 +1044,7 @@ class FaissIndex(VectorIndex):
         """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            self.thread_pool,
-            self.search,
-            query_vector,
-            limit
+            self.thread_pool, self.search, query_vector, limit
         )
 
     def remove(self, vector_id: str) -> bool:
@@ -1094,11 +1084,7 @@ class FaissIndex(VectorIndex):
             True if the vector was removed, False if it wasn't found
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool,
-            self.remove,
-            vector_id
-        )
+        return await loop.run_in_executor(self.thread_pool, self.remove, vector_id)
 
     def clear(self) -> bool:
         """
@@ -1133,10 +1119,7 @@ class FaissIndex(VectorIndex):
             True if the index was cleared successfully
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool,
-            self.clear
-        )
+        return await loop.run_in_executor(self.thread_pool, self.clear)
 
     def optimize(self) -> bool:
         """
@@ -1147,14 +1130,16 @@ class FaissIndex(VectorIndex):
         """
         # Most FAISS indices don't need optimization
         # For IVF indices, we could retrain the quantizer
-        if hasattr(
-                self.index, 'train') and hasattr(
-                self.index, 'is_trained') and not self.index.is_trained:
+        if (
+            hasattr(self.index, "train")
+            and hasattr(self.index, "is_trained")
+            and not self.index.is_trained
+        ):
             try:
                 # Get all vectors
                 vectors = np.array(
-                    [vector.astype(np.float32)
-                     for vector in self.vectors.values()])
+                    [vector.astype(np.float32) for vector in self.vectors.values()]
+                )
                 if len(vectors) > 0:
                     self.index.train(vectors)
                     return True
@@ -1171,10 +1156,7 @@ class FaissIndex(VectorIndex):
             True if the index was optimized successfully
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.thread_pool,
-            self.optimize
-        )
+        return await loop.run_in_executor(self.thread_pool, self.optimize)
 
     def size(self) -> int:
         """
@@ -1197,5 +1179,5 @@ class FaissIndex(VectorIndex):
             "size": self.size(),
             "dimension": self.vector_dim,
             "gpu_enabled": self.use_gpu,
-            "nprobe": self.nprobe if hasattr(self.index, 'nprobe') else None
+            "nprobe": self.nprobe if hasattr(self.index, "nprobe") else None,
         }

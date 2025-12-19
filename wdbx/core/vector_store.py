@@ -69,8 +69,8 @@ class VectorStore:
 
         # Thread pool for parallel processing
         self.thread_pool = ThreadPoolExecutor(
-            max_workers=self.config.get(
-                "VECTOR_STORE_THREADS", os.cpu_count() or 4))
+            max_workers=self.config.get("VECTOR_STORE_THREADS", os.cpu_count() or 4)
+        )
 
         # Create data directories
         self._create_dirs()
@@ -82,7 +82,8 @@ class VectorStore:
         self._load_data()
 
         logger.info(
-            f"VectorStore initialized with {self.count()} vectors, {self.num_shards} shards, index_type={self.index_type}")
+            f"VectorStore initialized with {self.count()} vectors, {self.num_shards} shards, index_type={self.index_type}"
+        )
 
     def _create_dirs(self):
         """Create necessary data directories."""
@@ -118,14 +119,14 @@ class VectorStore:
                 index = HNSWIndex(
                     vector_dim=self.vector_dim,
                     index_path=index_path,
-                    config=self.config
+                    config=self.config,
                 )
             elif self.index_type == "faiss":
                 index = FaissIndex(
                     vector_dim=self.vector_dim,
                     index_path=index_path,
                     use_gpu=self.use_gpu,
-                    config=self.config
+                    config=self.config,
                 )
             else:
                 raise ValueError(f"Unsupported index type: {self.index_type}")
@@ -138,10 +139,9 @@ class VectorStore:
         metadata_path = self.data_dir / "metadata" / "metadata.json"
         if metadata_path.exists():
             try:
-                with open(metadata_path, 'r') as f:
+                with open(metadata_path, "r") as f:
                     self.metadata = json.load(f)
-                logger.debug(
-                    f"Loaded metadata for {len(self.metadata)} vectors")
+                logger.debug(f"Loaded metadata for {len(self.metadata)} vectors")
             except Exception as e:
                 logger.error(f"Error loading metadata: {e}")
 
@@ -149,7 +149,7 @@ class VectorStore:
         vectors_path = self.data_dir / "vectors" / "vectors.pickle"
         if vectors_path.exists():
             try:
-                with open(vectors_path, 'rb') as f:
+                with open(vectors_path, "rb") as f:
                     self.vectors = pickle.load(f)
                 logger.debug(f"Loaded {len(self.vectors)} vectors")
             except Exception as e:
@@ -159,7 +159,7 @@ class VectorStore:
         """Save metadata to disk."""
         metadata_path = self.data_dir / "metadata" / "metadata.json"
         try:
-            with open(metadata_path, 'w') as f:
+            with open(metadata_path, "w") as f:
                 json.dump(self.metadata, f)
             logger.debug(f"Saved metadata for {len(self.metadata)} vectors")
         except Exception as e:
@@ -169,7 +169,7 @@ class VectorStore:
         """Save vectors to disk."""
         vectors_path = self.data_dir / "vectors" / "vectors.pickle"
         try:
-            with open(vectors_path, 'wb') as f:
+            with open(vectors_path, "wb") as f:
                 pickle.dump(self.vectors, f)
             logger.debug(f"Saved {len(self.vectors)} vectors")
         except Exception as e:
@@ -220,7 +220,7 @@ class VectorStore:
         self,
         vector_id: str,
         vector: List[float],
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Store a vector and its metadata.
@@ -259,7 +259,7 @@ class VectorStore:
         self,
         vector_id: str,
         vector: List[float],
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Asynchronously store a vector and its metadata.
@@ -290,7 +290,7 @@ class VectorStore:
                 loop = asyncio.get_event_loop()
                 await loop.run_in_executor(
                     self.thread_pool,
-                    lambda: (self._save_metadata(), self._save_vectors())
+                    lambda: (self._save_metadata(), self._save_vectors()),
                 )
 
             return True
@@ -303,7 +303,7 @@ class VectorStore:
         query_vector: List[float],
         limit: int = 10,
         threshold: float = 0.0,
-        filter_metadata: Optional[Dict[str, Any]] = None
+        filter_metadata: Optional[Dict[str, Any]] = None,
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
         """
         Search for similar vectors.
@@ -357,7 +357,7 @@ class VectorStore:
         query_vector: List[float],
         limit: int = 10,
         threshold: float = 0.0,
-        filter_metadata: Optional[Dict[str, Any]] = None
+        filter_metadata: Optional[Dict[str, Any]] = None,
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
         """
         Asynchronously search for similar vectors.
@@ -375,8 +375,9 @@ class VectorStore:
         query_np = np.array(query_vector, dtype=np.float32)
 
         # Search in each shard asynchronously and collect results
-        search_tasks = [index.search_async(
-            query_np, limit=limit) for index in self.indices]
+        search_tasks = [
+            index.search_async(query_np, limit=limit) for index in self.indices
+        ]
         shard_results = await asyncio.gather(*search_tasks)
 
         # Combine results from all shards
@@ -410,8 +411,7 @@ class VectorStore:
 
         return results_with_metadata
 
-    def _matches_filter(
-            self, vector_id: str, filter_metadata: Dict[str, Any]) -> bool:
+    def _matches_filter(self, vector_id: str, filter_metadata: Dict[str, Any]) -> bool:
         """
         Check if a vector's metadata matches the filter criteria.
 
@@ -428,31 +428,29 @@ class VectorStore:
         # Check each filter criterion
         for key, value in filter_metadata.items():
             # Handle special operators (e.g., $gt, $lt, $in)
-            if isinstance(
-                    value, dict) and list(
-                    value.keys())[0].startswith('$'):
+            if isinstance(value, dict) and list(value.keys())[0].startswith("$"):
                 op = list(value.keys())[0]
                 op_value = value[op]
 
-                if op == '$gt':
+                if op == "$gt":
                     if key not in metadata or metadata[key] <= op_value:
                         return False
-                elif op == '$lt':
+                elif op == "$lt":
                     if key not in metadata or metadata[key] >= op_value:
                         return False
-                elif op == '$gte':
+                elif op == "$gte":
                     if key not in metadata or metadata[key] < op_value:
                         return False
-                elif op == '$lte':
+                elif op == "$lte":
                     if key not in metadata or metadata[key] > op_value:
                         return False
-                elif op == '$in':
+                elif op == "$in":
                     if key not in metadata or metadata[key] not in op_value:
                         return False
-                elif op == '$nin':
+                elif op == "$nin":
                     if key in metadata and metadata[key] in op_value:
                         return False
-                elif op == '$exists':
+                elif op == "$exists":
                     if op_value and key not in metadata:
                         return False
                     if not op_value and key in metadata:
@@ -520,14 +518,12 @@ class VectorStore:
             # Run in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(
-                self.thread_pool,
-                lambda: (self._save_metadata(), self._save_vectors())
+                self.thread_pool, lambda: (self._save_metadata(), self._save_vectors())
             )
 
         return True
 
-    def update_metadata(
-            self, vector_id: str, metadata: Dict[str, Any]) -> bool:
+    def update_metadata(self, vector_id: str, metadata: Dict[str, Any]) -> bool:
         """
         Update the metadata for a vector.
 
@@ -552,7 +548,8 @@ class VectorStore:
         return True
 
     async def update_metadata_async(
-            self, vector_id: str, metadata: Dict[str, Any]) -> bool:
+        self, vector_id: str, metadata: Dict[str, Any]
+    ) -> bool:
         """
         Asynchronously update the metadata for a vector.
 
@@ -574,10 +571,7 @@ class VectorStore:
         if self.config.get("VECTOR_STORE_SAVE_IMMEDIATELY", False):
             # Run in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(
-                self.thread_pool,
-                self._save_metadata
-            )
+            await loop.run_in_executor(self.thread_pool, self._save_metadata)
 
         return True
 
@@ -601,7 +595,9 @@ class VectorStore:
 
         return vector, metadata
 
-    async def get_async(self, vector_id: str) -> Optional[Tuple[List[float], Dict[str, Any]]]:
+    async def get_async(
+        self, vector_id: str
+    ) -> Optional[Tuple[List[float], Dict[str, Any]]]:
         """
         Asynchronously get a vector and its metadata by ID.
 
@@ -666,8 +662,7 @@ class VectorStore:
         # Save empty state in thread pool
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(
-            self.thread_pool,
-            lambda: (self._save_metadata(), self._save_vectors())
+            self.thread_pool, lambda: (self._save_metadata(), self._save_vectors())
         )
 
         return count
@@ -681,12 +676,14 @@ class VectorStore:
         """
         index_stats = []
         for i, index in enumerate(self.indices):
-            index_stats.append({
-                "shard": i,
-                "type": self.index_type,
-                "size": index.size(),
-                "stats": index.get_stats()
-            })
+            index_stats.append(
+                {
+                    "shard": i,
+                    "type": self.index_type,
+                    "size": index.size(),
+                    "stats": index.get_stats(),
+                }
+            )
 
         return {
             "vector_count": len(self.vectors),
@@ -723,7 +720,7 @@ class VectorStore:
     def batch_store(
         self,
         vectors: Dict[str, List[float]],
-        metadata: Optional[Dict[str, Dict[str, Any]]] = None
+        metadata: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> int:
         """
         Store multiple vectors in batch.
@@ -768,7 +765,7 @@ class VectorStore:
     async def batch_store_async(
         self,
         vectors: Dict[str, List[float]],
-        metadata: Optional[Dict[str, Dict[str, Any]]] = None
+        metadata: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> int:
         """
         Asynchronously store multiple vectors in batch.
@@ -812,8 +809,7 @@ class VectorStore:
             # Run in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(
-                self.thread_pool,
-                lambda: (self._save_metadata(), self._save_vectors())
+                self.thread_pool, lambda: (self._save_metadata(), self._save_vectors())
             )
 
         return len(vectors)

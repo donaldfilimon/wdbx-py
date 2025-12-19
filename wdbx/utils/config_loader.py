@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_config(
-    config_path: Optional[str] = None,
-    env_prefix: str = "WDBX_"
+    config_path: Optional[str] = None, env_prefix: str = "WDBX_"
 ) -> Dict[str, Any]:
     """
     Load WDBX configuration from file and environment variables.
@@ -33,23 +32,23 @@ def load_config(
         config_file = Path(config_path)
         if config_file.exists():
             try:
-                if config_file.suffix.lower() in ['.yaml', '.yml']:
-                    with open(config_file, 'r') as f:
+                if config_file.suffix.lower() in [".yaml", ".yml"]:
+                    with open(config_file, "r") as f:
                         file_config = yaml.safe_load(f)
-                elif config_file.suffix.lower() == '.json':
-                    with open(config_file, 'r') as f:
+                elif config_file.suffix.lower() == ".json":
+                    with open(config_file, "r") as f:
                         file_config = json.load(f)
                 else:
                     logger.warning(
-                        f"Unsupported config file format: {config_file.suffix}")
+                        f"Unsupported config file format: {config_file.suffix}"
+                    )
                     file_config = {}
 
                 # Convert keys to uppercase with prefix for consistency
                 _update_config_recursive(config, file_config, env_prefix)
                 logger.info(f"Loaded configuration from {config_path}")
             except Exception as e:
-                logger.error(
-                    f"Error loading configuration from {config_path}: {e}")
+                logger.error(f"Error loading configuration from {config_path}: {e}")
         else:
             logger.warning(f"Configuration file not found: {config_path}")
 
@@ -63,10 +62,7 @@ def load_config(
 
 
 def _update_config_recursive(
-    config: Dict[str, Any],
-    source: Dict[str, Any],
-    prefix: str,
-    current_path: str = ""
+    config: Dict[str, Any], source: Dict[str, Any], prefix: str, current_path: str = ""
 ) -> None:
     """
     Recursively update configuration dictionary from source.
@@ -120,11 +116,7 @@ def _parse_value(value: str) -> Any:
     return value
 
 
-def save_config(
-    config: Dict[str, Any],
-    config_path: str,
-    format: str = "yaml"
-) -> bool:
+def save_config(config: Dict[str, Any], config_path: str, format: str = "yaml") -> bool:
     """
     Save configuration to a file.
 
@@ -166,10 +158,10 @@ def save_config(
 
         # Save in requested format
         if format.lower() == "yaml":
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 yaml.dump(hierarchical_config, f, default_flow_style=False)
         elif format.lower() == "json":
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 json.dump(hierarchical_config, f, indent=2)
         else:
             logger.error(f"Unsupported config format: {format}")
