@@ -46,8 +46,7 @@ class WebScraperPlugin(WDBXPlugin):
         super().__init__(wdbx)
 
         # Load configuration
-        self.user_agent = self.get_config(
-            "USER_AGENT", "WDBX WebScraper/0.1.0")
+        self.user_agent = self.get_config("USER_AGENT", "WDBX WebScraper/0.1.0")
         self.respect_robots_txt = self.get_config("RESPECT_ROBOTS_TXT", True)
         self.timeout = float(self.get_config("TIMEOUT", 10.0))
         self.max_depth = int(self.get_config("MAX_DEPTH", 1))
@@ -57,8 +56,9 @@ class WebScraperPlugin(WDBXPlugin):
         self.session = None
 
         # Rate limiting
-        self.rate_limit = float(self.get_config(
-            "RATE_LIMIT", 1.0))  # requests per second
+        self.rate_limit = float(
+            self.get_config("RATE_LIMIT", 1.0)
+        )  # requests per second
         # domain -> (last_request_time, rate_limit)
         self.domain_rate_limits = {}
 
@@ -67,11 +67,9 @@ class WebScraperPlugin(WDBXPlugin):
 
         # Embedding model
         self.embedding_model = None
-        self.embedding_batch_size = int(
-            self.get_config("EMBEDDING_BATCH_SIZE", 8))
+        self.embedding_batch_size = int(self.get_config("EMBEDDING_BATCH_SIZE", 8))
 
-        logger.info(
-            f"Initialized WebScraperPlugin with user_agent={self.user_agent}")
+        logger.info(f"Initialized WebScraperPlugin with user_agent={self.user_agent}")
 
     @property
     def name(self) -> str:
@@ -81,7 +79,9 @@ class WebScraperPlugin(WDBXPlugin):
     @property
     def description(self) -> str:
         """Return a description of the plugin."""
-        return "Web scraper plugin for WDBX, allowing content extraction from web pages."
+        return (
+            "Web scraper plugin for WDBX, allowing content extraction from web pages."
+        )
 
     @property
     def version(self) -> str:
@@ -99,32 +99,39 @@ class WebScraperPlugin(WDBXPlugin):
             # Create session
             self.session = aiohttp.ClientSession(
                 headers={"User-Agent": self.user_agent},
-                timeout=aiohttp.ClientTimeout(total=self.timeout)
+                timeout=aiohttp.ClientTimeout(total=self.timeout),
             )
 
             # Initialize embedding model if available
             try:
                 # Try to get embedding model from another plugin
                 for plugin_name in [
-                        "openai", "ollama", "huggingface", "sentencetransformers"]:
+                    "openai",
+                    "ollama",
+                    "huggingface",
+                    "sentencetransformers",
+                ]:
                     if plugin_name in self.wdbx.plugins:
                         self.embedding_model = self.wdbx.plugins[plugin_name]
-                        logger.info(
-                            f"Using {plugin_name} plugin for embeddings")
+                        logger.info(f"Using {plugin_name} plugin for embeddings")
                         break
 
                 # If no plugin is available, try to load a local model
                 if not self.embedding_model:
                     try:
                         from sentence_transformers import SentenceTransformer
+
                         model_name = self.get_config(
-                            "EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+                            "EMBEDDING_MODEL", "all-MiniLM-L6-v2"
+                        )
                         self.embedding_model = SentenceTransformer(model_name)
                         logger.info(
-                            f"Using local SentenceTransformer model: {model_name}")
+                            f"Using local SentenceTransformer model: {model_name}"
+                        )
                     except ImportError:
                         logger.warning(
-                            "SentenceTransformer not available, embeddings will be delegated")
+                            "SentenceTransformer not available, embeddings will be delegated"
+                        )
             except Exception as e:
                 logger.warning(f"Error initializing embedding model: {e}")
                 self.embedding_model = None
@@ -144,8 +151,9 @@ class WebScraperPlugin(WDBXPlugin):
             self.session = None
         logger.info("WebScraperPlugin shut down")
 
-    async def extract_content(self, url: str, depth: int = 0,
-                              follow_links: bool = False) -> str:
+    async def extract_content(
+        self, url: str, depth: int = 0, follow_links: bool = False
+    ) -> str:
         """
         Extract content from a web page.
 
@@ -179,7 +187,8 @@ class WebScraperPlugin(WDBXPlugin):
             async with self.session.get(url) as response:
                 if response.status != 200:
                     raise PluginError(
-                        f"Failed to fetch {url}: {response.status} {response.reason}")
+                        f"Failed to fetch {url}: {response.status} {response.reason}"
+                    )
 
                 # Get content type
                 content_type = response.headers.get("Content-Type", "").lower()
@@ -203,8 +212,7 @@ class WebScraperPlugin(WDBXPlugin):
                     # Plain text
                     return await response.text()
                 else:
-                    raise PluginError(
-                        f"Unsupported content type: {content_type}")
+                    raise PluginError(f"Unsupported content type: {content_type}")
         except PluginError:
             raise
         except Exception as e:
@@ -233,8 +241,11 @@ class WebScraperPlugin(WDBXPlugin):
                 script.decompose()
 
             # Get main content area, if any
-            main_content = soup.find("main") or soup.find(
-                "article") or soup.find("div", {"id": "content"})
+            main_content = (
+                soup.find("main")
+                or soup.find("article")
+                or soup.find("div", {"id": "content"})
+            )
 
             if main_content:
                 # Extract text from main content
@@ -283,16 +294,13 @@ class WebScraperPlugin(WDBXPlugin):
 
             return text
         except ImportError:
-            logger.warning(
-                "PyPDF2 not installed, PDF extraction not available")
-            raise PluginError(
-                "PyPDF2 not installed, PDF extraction not available")
+            logger.warning("PyPDF2 not installed, PDF extraction not available")
+            raise PluginError("PyPDF2 not installed, PDF extraction not available")
         except Exception as e:
             logger.error(f"Error extracting PDF content: {e}")
             raise PluginError(f"Error extracting PDF content: {e}")
 
-    async def _follow_links(
-            self, html: str, base_url: str, depth: int) -> None:
+    async def _follow_links(self, html: str, base_url: str, depth: int) -> None:
         """
         Follow links in HTML content.
 
@@ -327,9 +335,9 @@ class WebScraperPlugin(WDBXPlugin):
             # Follow links concurrently
             tasks = []
             for link in links:
-                task = asyncio.create_task(self.extract_content(
-                    link, depth,
-                    follow_links=False))
+                task = asyncio.create_task(
+                    self.extract_content(link, depth, follow_links=False)
+                )
                 tasks.append(task)
 
             # Wait for all tasks to complete
@@ -390,7 +398,8 @@ class WebScraperPlugin(WDBXPlugin):
         except ImportError:
             # If robotparser is not available, assume all URLs are allowed
             logger.warning(
-                "urllib.robotparser not available, robots.txt checking disabled")
+                "urllib.robotparser not available, robots.txt checking disabled"
+            )
             return True
         except Exception as e:
             logger.error(f"Error checking robots.txt: {e}")
@@ -441,12 +450,12 @@ class WebScraperPlugin(WDBXPlugin):
         try:
             # If we have an embedding model plugin, use it
             if self.embedding_model and hasattr(
-                    self.embedding_model, "create_embedding"):
+                self.embedding_model, "create_embedding"
+            ):
                 return await self.embedding_model.create_embedding(text)
 
             # If we have a local SentenceTransformer model, use it
-            if self.embedding_model and hasattr(
-                    self.embedding_model, "encode"):
+            if self.embedding_model and hasattr(self.embedding_model, "encode"):
                 embedding = self.embedding_model.encode(text)
                 return embedding.tolist()
 
@@ -496,6 +505,7 @@ class WebScraperPlugin(WDBXPlugin):
 
                         # Extract links
                         from bs4 import BeautifulSoup
+
                         soup = BeautifulSoup(content, "html.parser")
 
                         # Find all links
@@ -560,12 +570,12 @@ class WebScraperPlugin(WDBXPlugin):
         try:
             # If we have an embedding model plugin, use it
             if self.embedding_model and hasattr(
-                    self.embedding_model, "create_embeddings_batch"):
+                self.embedding_model, "create_embeddings_batch"
+            ):
                 return await self.embedding_model.create_embeddings_batch(texts)
 
             # If we have a local SentenceTransformer model, use it
-            if self.embedding_model and hasattr(
-                    self.embedding_model, "encode"):
+            if self.embedding_model and hasattr(self.embedding_model, "encode"):
                 embeddings = self.embedding_model.encode(texts)
                 return embeddings.tolist()
 
@@ -581,7 +591,8 @@ class WebScraperPlugin(WDBXPlugin):
             raise PluginError(f"Error creating embeddings batch: {e}")
 
     async def store_webpage(
-            self, url: str, metadata: Optional[Dict[str, Any]] = None) -> str:
+        self, url: str, metadata: Optional[Dict[str, Any]] = None
+    ) -> str:
         """
         Extract content from a webpage and store it in the vector database.
 
@@ -619,8 +630,7 @@ class WebScraperPlugin(WDBXPlugin):
             logger.error(f"Error storing webpage {url}: {e}")
             raise PluginError(f"Error storing webpage {url}: {e}")
 
-    async def store_website(
-            self, start_url: str, max_pages: int = 10) -> List[str]:
+    async def store_website(self, start_url: str, max_pages: int = 10) -> List[str]:
         """
         Crawl a website and store all pages in the vector database.
 
@@ -649,7 +659,7 @@ class WebScraperPlugin(WDBXPlugin):
                     "url": url,
                     "source": "webscraper",
                     "extraction_time": time.time(),
-                    "content": content
+                    "content": content,
                 }
 
                 # Store in vector database
@@ -673,7 +683,7 @@ class WebScraperPlugin(WDBXPlugin):
                     "--follow": "Follow links on the page",
                     "--depth": "Maximum crawl depth",
                     "--store": "Store in vector database",
-                }
+                },
             )
 
             self.wdbx.register_command(
@@ -683,7 +693,7 @@ class WebScraperPlugin(WDBXPlugin):
                 {
                     "--url": "URL to start crawling from",
                     "--max-pages": "Maximum number of pages to crawl",
-                }
+                },
             )
 
     async def _cmd_scrape(self, args):
@@ -691,15 +701,15 @@ class WebScraperPlugin(WDBXPlugin):
         import argparse
 
         # Parse arguments
-        parser = argparse.ArgumentParser(
-            description="Extract content from a webpage")
+        parser = argparse.ArgumentParser(description="Extract content from a webpage")
         parser.add_argument("--url", required=True, help="URL to scrape")
-        parser.add_argument("--follow", action="store_true",
-                            help="Follow links on the page")
-        parser.add_argument("--depth", type=int, default=1,
-                            help="Maximum crawl depth")
-        parser.add_argument("--store", action="store_true",
-                            help="Store in vector database")
+        parser.add_argument(
+            "--follow", action="store_true", help="Follow links on the page"
+        )
+        parser.add_argument("--depth", type=int, default=1, help="Maximum crawl depth")
+        parser.add_argument(
+            "--store", action="store_true", help="Store in vector database"
+        )
 
         try:
             parsed_args = parser.parse_args(args.split())
@@ -708,11 +718,12 @@ class WebScraperPlugin(WDBXPlugin):
 
         try:
             # Extract content
-            content = await self.extract_content(parsed_args.url, depth=0, follow_links=parsed_args.follow)
+            content = await self.extract_content(
+                parsed_args.url, depth=0, follow_links=parsed_args.follow
+            )
 
             # Print content summary
-            print(
-                f"Extracted {len(content)} characters from {parsed_args.url}")
+            print(f"Extracted {len(content)} characters from {parsed_args.url}")
             print("Content snippet:")
             print(content[:500] + "..." if len(content) > 500 else content)
 
@@ -729,12 +740,12 @@ class WebScraperPlugin(WDBXPlugin):
 
         # Parse arguments
         parser = argparse.ArgumentParser(
-            description="Crawl a website and store pages in the vector database")
-        parser.add_argument("--url", required=True,
-                            help="URL to start crawling from")
+            description="Crawl a website and store pages in the vector database"
+        )
+        parser.add_argument("--url", required=True, help="URL to start crawling from")
         parser.add_argument(
-            "--max-pages", type=int, default=10,
-            help="Maximum number of pages to crawl")
+            "--max-pages", type=int, default=10, help="Maximum number of pages to crawl"
+        )
 
         try:
             parsed_args = parser.parse_args(args.split())
@@ -743,9 +754,10 @@ class WebScraperPlugin(WDBXPlugin):
 
         try:
             # Crawl website
-            print(
-                f"Crawling {parsed_args.url} (max {parsed_args.max_pages} pages)")
-            vector_ids = await self.store_website(parsed_args.url, parsed_args.max_pages)
+            print(f"Crawling {parsed_args.url} (max {parsed_args.max_pages} pages)")
+            vector_ids = await self.store_website(
+                parsed_args.url, parsed_args.max_pages
+            )
 
             # Print results
             print(f"Stored {len(vector_ids)} pages in vector database")
@@ -754,3 +766,48 @@ class WebScraperPlugin(WDBXPlugin):
                 print(f"  {vector_id}")
         except Exception as e:
             print(f"Error: {e}")
+
+
+# Examples and guides for using the web scraper plugin
+
+
+# Example 1: Extracting content from a single webpage
+async def example_extract_content():
+    wdbx_instance = WDBX(vector_dimension=384, enable_plugins=True)
+    await wdbx_instance.initialize()
+
+    webscraper = wdbx_instance.get_plugin("webscraper")
+    if webscraper:
+        url = "https://example.com"
+        content = await webscraper.extract_content(url)
+        print(f"Extracted content from {url}:\n{content}")
+
+    await wdbx_instance.shutdown()
+
+
+# Example 2: Storing a webpage in the vector database
+async def example_store_webpage():
+    wdbx_instance = WDBX(vector_dimension=384, enable_plugins=True)
+    await wdbx_instance.initialize()
+
+    webscraper = wdbx_instance.get_plugin("webscraper")
+    if webscraper:
+        url = "https://example.com"
+        vector_id = await webscraper.store_webpage(url)
+        print(f"Stored webpage {url} with vector ID: {vector_id}")
+
+    await wdbx_instance.shutdown()
+
+
+# Example 3: Crawling a website and storing pages in the vector database
+async def example_store_website():
+    wdbx_instance = WDBX(vector_dimension=384, enable_plugins=True)
+    await wdbx_instance.initialize()
+
+    webscraper = wdbx_instance.get_plugin("webscraper")
+    if webscraper:
+        start_url = "https://example.com"
+        vector_ids = await webscraper.store_website(start_url, max_pages=5)
+        print(f"Stored {len(vector_ids)} pages from {start_url} in vector database")
+
+    await wdbx_instance.shutdown()

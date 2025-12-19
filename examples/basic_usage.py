@@ -22,8 +22,7 @@ async def main():
     try:
         # Store a vector
         vector = [0.1] * 384  # Example vector
-        metadata = {"source": "example",
-                    "content": "Sample text for demonstration"}
+        metadata = {"source": "example", "content": "Sample text for demonstration"}
         vector_id = await wdbx.vector_store_async(vector, metadata)
         print(f"Stored vector with ID: {vector_id}")
 
@@ -48,6 +47,7 @@ async def main():
     finally:
         # Clean up
         await wdbx.shutdown()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

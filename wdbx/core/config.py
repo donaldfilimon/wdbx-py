@@ -29,20 +29,17 @@ class WDBXConfig:
         "VECTOR_STORE_SAVE_IMMEDIATELY": False,
         "VECTOR_STORE_THREADS": os.cpu_count() or 4,
         "VECTOR_STORE_CACHE_SIZE_MB": 128,
-
         # Index settings
         "HNSW_M": 16,
         "HNSW_EF_CONSTRUCTION": 200,
         "HNSW_EF_SEARCH": 50,
         "FAISS_INDEX_TYPE": "Flat",
         "FAISS_NPROBE": 8,
-
         # Distributed settings
         "DISTRIBUTED_HOST": "localhost",
         "DISTRIBUTED_PORT": 7777,
         "DISTRIBUTED_AUTH_ENABLED": False,
         "DISTRIBUTED_AUTH_KEY": "",
-
         # Plugin settings
         "PLUGIN_DIRECTORY": "plugins",
         "PLUGIN_AUTO_DISCOVER": True,
@@ -50,8 +47,10 @@ class WDBXConfig:
     }
 
     def __init__(
-            self, config_dict: Optional[Dict[str, Any]] = None,
-            config_path: Optional[str] = None):
+        self,
+        config_dict: Optional[Dict[str, Any]] = None,
+        config_path: Optional[str] = None,
+    ):
         """
         Initialize a new configuration manager.
 
@@ -95,7 +94,7 @@ class WDBXConfig:
             return
 
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 file_config = json.load(f)
 
             # Update configuration
@@ -104,9 +103,10 @@ class WDBXConfig:
                 self.config_sources[key] = f"file:{config_path}"
 
             logger.debug(f"Loaded configuration from file: {config_path}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Malformed configuration file {config_path}: {e}")
         except Exception as e:
-            logger.error(
-                f"Error loading configuration from file {config_path}: {e}")
+            logger.error(f"Error loading configuration from file {config_path}: {e}")
 
     def _load_config_from_env(self):
         """Load configuration from environment variables."""
@@ -212,8 +212,7 @@ class WDBXConfig:
         """
         return self.config_dict.copy()
 
-    def get_typed(
-            self, key: str, expected_type: type, default: Any = None) -> Any:
+    def get_typed(self, key: str, expected_type: type, default: Any = None) -> Any:
         """
         Get a configuration value with type checking.
 
@@ -245,7 +244,9 @@ class WDBXConfig:
                 return str(value)
             elif expected_type is list:
                 if isinstance(value, str):
-                    return json.loads(value) if value.startswith("[") else value.split(",")
+                    return (
+                        json.loads(value) if value.startswith("[") else value.split(",")
+                    )
                 return list(value)
             elif expected_type is dict:
                 if isinstance(value, str):
@@ -253,12 +254,14 @@ class WDBXConfig:
                 return dict(value)
         except (ValueError, TypeError, json.JSONDecodeError):
             logger.warning(
-                f"Could not convert config value {key}={value} to {expected_type.__name__}, using default")
+                f"Could not convert config value {key}={value} to {expected_type.__name__}, using default"
+            )
             return default
 
         # If we can't convert, return default
         logger.warning(
-            f"Could not convert config value {key}={value} to {expected_type.__name__}, using default")
+            f"Could not convert config value {key}={value} to {expected_type.__name__}, using default"
+        )
         return default
 
     def save_to_file(self, config_path: str) -> bool:
@@ -276,14 +279,13 @@ class WDBXConfig:
             if not path.parent.exists():
                 path.parent.mkdir(parents=True)
 
-            with open(path, 'w') as f:
+            with open(path, "w") as f:
                 json.dump(self.config_dict, f, indent=2, sort_keys=True)
 
             logger.debug(f"Saved configuration to file: {config_path}")
             return True
         except Exception as e:
-            logger.error(
-                f"Error saving configuration to file {config_path}: {e}")
+            logger.error(f"Error saving configuration to file {config_path}: {e}")
             return False
 
     def reset(self) -> None:
